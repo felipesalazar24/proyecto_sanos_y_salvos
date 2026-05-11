@@ -1,16 +1,17 @@
-package main.java.cl.sanos_y_salvos.ms_base.api.model;
+package cl.sanos_y_salvos.ms_base.api.model;
 
-import java.lang.annotation.Inherited;
-import javax.annotation.processing.Generated;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 @Data
 @Builder
 @Entity
 @Table(name = "users")
+@AllArgsConstructor
+@NoArgsConstructor
 
 public class User {
     @Id

@@ -1,4 +1,4 @@
-package main.java.cl.sanos_y_salvos.ms_base.api.DTO;
+package cl.sanos_y_salvos.ms_base.api.DTO;
 
 import lombok.Data;
 
