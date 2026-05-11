@@ -1,11 +1,11 @@
-package main.java.cl.sanos_y_salvos.ms_base.api.service;
+package cl.sanos_y_salvos.ms_base.api.service;
 
-import main.java.cl.sanos_y_salvos.ms_base.api.DTO.UserDto;
-import main.java.cl.sanos_y_salvos.ms_base.api.repository.UserRepository;
+import cl.sanos_y_salvos.ms_base.api.DTO.UserDto;
+import cl.sanos_y_salvos.ms_base.api.model.User;
 
-import java.lang.foreign.Linker.Option;
+import cl.sanos_y_salvos.ms_base.api.repository.UserRepository;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
@@ -16,41 +16,37 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    // --- MÉTODOS PÚBLICOS ---
+
     public UserDto getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado con el id: " + id));
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el id: " + id));
+        return entityToDto(user);
     }
 
     public List<UserDto> getAllUsers() {
-        return userRepository.findAll();    
+        return userRepository.findAll().stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public UserDto createUser(UserDto userDto) {
-        return userRepository.save(userDto);
+        User user = dtoToEntity(userDto);
+        User savedUser = userRepository.save(user);
+        return entityToDto(savedUser);
     }
 
-    @transactional
+    @Transactional
     public UserDto updateUser(Long id, UserDto userDto) {
-        Optional<UserDto> optionalUser = userRepository.findById(id);
-        if (optionalUser.present()) {
-            
-        UserDto existingUser = optionalUser.get();
-        existingUser.setName(userDto.getName());
-        existingUser.setLastName(userDto.getLastName());
-        existingUser.setEmail(userDto.getEmail());
-        existingUser.setPassword(userDto.getPassword());
-        existingUser.setPhoneNumber(userDto.getPhoneNumber());
-        existingUser.setAddress(userDto.getAddress());
-        existingUser.setAddressNumber(userDto.getAddressNumber());
-        existingUser.setCity(userDto.getCity());
-        existingUser.setCountry(userDto.getCountry());
-        existingUser.setRole(userDto.getRole());
-
-        return userRepository.save(existingUser);   
-        } else {
-             throw new RuntimeException("Usuario no encontrado con el id: " + id);
-             return null;
-        }
+        User existingUser = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el id: " + id));
+        
+        // Actualizamos los datos de la entidad existente
+        updateEntityFromDto(existingUser, userDto);
+        
+        User updatedUser = userRepository.save(existingUser);
+        return entityToDto(updatedUser);
     }
 
     @Transactional
@@ -62,5 +58,49 @@ public class UserService {
         }
     }
 
-    
+
+    private User dtoToEntity(UserDto dto) {
+        User entity = new User();
+        entity.setName(dto.getName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
+        entity.setPassword(dto.getPassword());
+        entity.setPhoneNumber(dto.getPhoneNumber());
+        entity.setAddress(dto.getAddress());
+        entity.setAddressNumber(dto.getAddressNumber());
+        entity.setCity(dto.getCity());
+        entity.setCountry(dto.getCountry());
+        entity.setRole(dto.getRole());
+        return entity;
+    }
+
+    private UserDto entityToDto(User entity) {
+        UserDto dto = new UserDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setLastName(entity.getLastName());
+        dto.setEmail(entity.getEmail());
+        dto.setPhoneNumber(entity.getPhoneNumber());
+        dto.setAddress(entity.getAddress());
+        dto.setAddressNumber(entity.getAddressNumber());
+        dto.setCity(entity.getCity());
+        dto.setCountry(entity.getCountry());
+        dto.setRole(entity.getRole());
+        // Incluimos password porque el BFF se encargará de la seguridad
+        dto.setPassword(entity.getPassword()); 
+        return dto;
+    }
+
+    private void updateEntityFromDto(User entity, UserDto dto) {
+        entity.setName(dto.getName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
+        entity.setPassword(dto.getPassword());
+        entity.setPhoneNumber(dto.getPhoneNumber());
+        entity.setAddress(dto.getAddress());
+        entity.setAddressNumber(dto.getAddressNumber());
+        entity.setCity(dto.getCity());
+        entity.setCountry(dto.getCountry());
+        entity.setRole(dto.getRole());
+    }
 }
