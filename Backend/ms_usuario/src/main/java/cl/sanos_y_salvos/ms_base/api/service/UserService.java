@@ -1,6 +1,7 @@
 package cl.sanos_y_salvos.ms_base.api.service;
 
 import cl.sanos_y_salvos.ms_base.api.DTO.UserDto;
+import cl.sanos_y_salvos.ms_base.api.DTO.AuthUserDTO;
 import cl.sanos_y_salvos.ms_base.api.model.User;
 import cl.sanos_y_salvos.ms_base.api.repository.UserRepository;
 
@@ -55,6 +56,17 @@ public class UserService {
         }
     }
 
+    public AuthUserDTO getAuthInfoByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .map(user -> {
+                AuthUserDTO dto = new AuthUserDTO();
+                dto.setId(user.getId());
+                dto.setEmail(user.getEmail());
+                dto.setPassword(user.getPassword());
+                return dto;
+            })
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+    }
 
     private User dtoToEntity(UserDto dto) {
         User entity = new User();

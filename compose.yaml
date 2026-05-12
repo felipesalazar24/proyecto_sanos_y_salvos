@@ -1,4 +1,4 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   # --- MÓDULO DE USUARIOS (Local) ---
@@ -40,6 +40,41 @@ services:
     networks:
       - sanos-y-salvos-network
 
+  # --- MÓDULO DE AUTENTICACIÓN (Local con DB propia) ---
+  db-auth:
+    image: postgres:15-alpine
+    container_name: db_ms_auth
+    environment:
+      POSTGRES_DB: db_auth
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    # Puerto 5433 para no chocar con el 5432 de usuarios si usas un cliente SQL externo
+    ports:
+      - "5433:5432"
+    networks:
+      - sanos-y-salvos-network
+
+  ms-auth:
+    build:
+      context: ./Backend/ms_auth
+      dockerfile: Dockerfile
+    container_name: ms_auth_app
+    depends_on:
+      - ms-usuarios
+      - db-auth
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/db_auth
+      SPRING_DATASOURCE_USERNAME: felipe_admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      SERVER_PORT: 8083
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Desactivamos Flyway momentáneamente si no tienes los scripts listos
+      SPRING_FLYWAY_ENABLED: "false"
+    ports:
+      - "8083:8083"
+    networks:
+      - sanos-y-salvos-network
+
   # --- MÓDULO DE MASCOTAS (Neon Cloud) ---
   ms-mascotas:
     build:
@@ -47,7 +82,6 @@ services:
       dockerfile: Dockerfile
     container_name: ms_mascotas_app
     environment:
-      # Asegúrate de que esta URL sea la de tu proyecto en Neon
       SPRING_DATASOURCE_URL: jdbc:postgresql://ep-proud-firefly-aqkl84f5-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
       SPRING_DATASOURCE_USERNAME: neondb_owner
       SPRING_DATASOURCE_PASSWORD: npg_R2JwoAlkTa5m
