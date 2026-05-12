@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # --- MÓDULO DE USUARIOS (Local) ---
+  db-usuarios:
+    image: postgres:15-alpine
+    container_name: db_ms_usuarios
+    environment:
+      POSTGRES_DB: db_usuarios
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/usuarios_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_usuarios"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sanos-y-salvos-network
+
+  ms-usuarios:
+    build:
+      context: ./Backend/ms_usuario
+      dockerfile: Dockerfile
+    container_name: ms_usuarios_app
+    depends_on:
+      db-usuarios:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-usuarios:5432/db_usuarios
+      SPRING_DATASOURCE_USERNAME: felipe_admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      SERVER_PORT: 8081
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8081:8081"
+    networks:
+      - sanos-y-salvos-network
+
+  # --- MÓDULO DE AUTENTICACIÓN (Local con DB propia) ---
+  db-auth:
+    image: postgres:15-alpine
+    container_name: db_ms_auth
+    environment:
+      POSTGRES_DB: db_auth
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    # Puerto 5433 para no chocar con el 5432 de usuarios si usas un cliente SQL externo
+    ports:
+      - "5433:5432"
+    networks:
+      - sanos-y-salvos-network
+
+  ms-auth:
+    build:
+      context: ./Backend/ms_auth
+      dockerfile: Dockerfile
+    container_name: ms_auth_app
+    depends_on:
+      - ms-usuarios
+      - db-auth
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/db_auth
+      SPRING_DATASOURCE_USERNAME: felipe_admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      SERVER_PORT: 8083
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Desactivamos Flyway momentáneamente si no tienes los scripts listos
+      SPRING_FLYWAY_ENABLED: "false"
+    ports:
+      - "8083:8083"
+    networks:
+      - sanos-y-salvos-network
+
+  # --- MÓDULO DE MASCOTAS (Neon Cloud) ---
+  ms-mascotas:
+    build:
+      context: ./Backend/ms_mascota
+      dockerfile: Dockerfile
+    container_name: ms_mascotas_app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ep-proud-firefly-aqkl84f5-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
+      SPRING_DATASOURCE_USERNAME: neondb_owner
+      SPRING_DATASOURCE_PASSWORD: npg_R2JwoAlkTa5m
+      SERVER_PORT: 8082
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8082:8082"
+    networks:
+      - sanos-y-salvos-network
+
+networks:
+  sanos-y-salvos-network:
+    driver: bridge

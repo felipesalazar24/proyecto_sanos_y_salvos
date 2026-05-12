@@ -1,0 +1,9 @@
+# Docker Data (Bases de Datos locales)
+data/
+**/data/
+
+# Docker Logs
+*.log
+
+# Archivos de entorno (Si llegas a usar .env con claves de Neon)
+.env

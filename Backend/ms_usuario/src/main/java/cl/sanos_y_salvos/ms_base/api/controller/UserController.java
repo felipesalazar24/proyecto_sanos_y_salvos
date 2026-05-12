@@ -1,6 +1,7 @@
 package cl.sanos_y_salvos.ms_base.api.controller;
 
 import cl.sanos_y_salvos.ms_base.api.DTO.UserDto;
+import cl.sanos_y_salvos.ms_base.api.DTO.AuthUserDTO;
 import cl.sanos_y_salvos.ms_base.api.service.UserService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -62,5 +63,10 @@ public class UserController {
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/auth-info")
+    public ResponseEntity<AuthUserDTO> getAuthInfo(@RequestParam String email) {
+        return ResponseEntity.ok(userService.getAuthInfoByEmail(email));
     }
 }

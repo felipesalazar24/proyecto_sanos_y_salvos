@@ -25,8 +25,8 @@ WORKDIR /app
 
 COPY --from=build /app/build/libs/*.jar app.jar
 
-EXPOSE 8081
+EXPOSE 8083
 
-ENV SERVER_PORT=8081
+ENV SERVER_PORT=8083
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

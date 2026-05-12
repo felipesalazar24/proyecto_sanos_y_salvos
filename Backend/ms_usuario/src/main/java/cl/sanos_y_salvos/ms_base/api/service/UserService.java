@@ -1,9 +1,10 @@
 package cl.sanos_y_salvos.ms_base.api.service;
 
 import cl.sanos_y_salvos.ms_base.api.DTO.UserDto;
+import cl.sanos_y_salvos.ms_base.api.DTO.AuthUserDTO;
 import cl.sanos_y_salvos.ms_base.api.model.User;
-
 import cl.sanos_y_salvos.ms_base.api.repository.UserRepository;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,6 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
-    // --- MÉTODOS PÚBLICOS ---
 
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -42,7 +41,6 @@ public class UserService {
         User existingUser = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el id: " + id));
         
-        // Actualizamos los datos de la entidad existente
         updateEntityFromDto(existingUser, userDto);
         
         User updatedUser = userRepository.save(existingUser);
@@ -58,6 +56,17 @@ public class UserService {
         }
     }
 
+    public AuthUserDTO getAuthInfoByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .map(user -> {
+                AuthUserDTO dto = new AuthUserDTO();
+                dto.setId(user.getId());
+                dto.setEmail(user.getEmail());
+                dto.setPassword(user.getPassword());
+                return dto;
+            })
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+    }
 
     private User dtoToEntity(UserDto dto) {
         User entity = new User();
@@ -86,7 +95,6 @@ public class UserService {
         dto.setCity(entity.getCity());
         dto.setCountry(entity.getCountry());
         dto.setRole(entity.getRole());
-        // Incluimos password porque el BFF se encargará de la seguridad
         dto.setPassword(entity.getPassword()); 
         return dto;
     }
