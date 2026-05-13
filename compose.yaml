@@ -48,7 +48,6 @@ services:
       POSTGRES_DB: db_auth
       POSTGRES_USER: felipe_admin
       POSTGRES_PASSWORD: password123
-    # Puerto 5433 para no chocar con el 5432 de usuarios si usas un cliente SQL externo
     ports:
       - "5433:5432"
     networks:
@@ -68,7 +67,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8083
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      # Desactivamos Flyway momentáneamente si no tienes los scripts listos
       SPRING_FLYWAY_ENABLED: "false"
     ports:
       - "8083:8083"
@@ -89,6 +87,25 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8082:8082"
+    networks:
+      - sanos-y-salvos-network
+
+  # --- NUEVO: MÓDULO BFF (Orquestador Web) ---
+  ms-bff:
+    build:
+      context: ./Backend/ms_bff
+      dockerfile: Dockerfile
+    container_name: ms_bff_app
+    depends_on:
+      - ms-auth
+      - ms-usuarios
+      - ms-mascotas
+    environment:
+      SERVER_PORT: 8084
+      # Aquí es donde le dices al BFF cómo encontrar al micro de auth internamente
+      AUTH_SERVICE_URL: http://ms-auth:8083/api/v1/auth/login
+    ports:
+      - "8084:8084"
     networks:
       - sanos-y-salvos-network
 
