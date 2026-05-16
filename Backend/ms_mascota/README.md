@@ -12,6 +12,7 @@ Módulo especializado en la gestión de registros de mascotas y clasificaciones.
 - **Lenguaje:** Java 25 / Spring Boot 4.0.6.
 - **Puerto de Servicio:** 8082.
 - **Base de Datos:** PostgreSQL (Neon Cloud).
+- **Infraestructura:** Docker Container (Portabilidad y despliegue estandarizado).
 
 ## 4. Entidades Gestionadas
 - **Mascota:** Registro de avistamientos, descripción física, estado y ubicación.

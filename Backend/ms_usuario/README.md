@@ -12,6 +12,7 @@ Componente encargado de la gobernanza de identidad y persistencia de perfiles de
 - **Lenguaje:** Java 25 / Spring Boot 4.0.6.
 - **Puerto de Servicio:** 8081.
 - **Base de Datos:** PostgreSQL (Contenedor Local).
+- **Infraestructura:** Docker Container (Aislamiento de procesos y recursos).
 
 ## 4. Entidades Gestionadas
 - **Usuario:** Registro de perfiles con atributos de identidad, contacto, ubicación geográfica y roles de sistema.

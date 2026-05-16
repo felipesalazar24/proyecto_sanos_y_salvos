@@ -12,6 +12,7 @@ Servicio crítico encargado de la validación de credenciales y seguridad perime
 - **Lenguaje:** Java 25 / Spring Boot 4.0.6.
 - **Puerto de Servicio:** 8083.
 - **Interdependencia:** Conexión interna con `ms-usuarios`.
+- **Infraestructura:** Docker Container (Entorno de ejecución inmutable).
 
 ## 4. Entidades Gestionadas
 - **Sesión/Auth:** Gestión de tokens y validación de estados de seguridad de las cuentas de usuario.
