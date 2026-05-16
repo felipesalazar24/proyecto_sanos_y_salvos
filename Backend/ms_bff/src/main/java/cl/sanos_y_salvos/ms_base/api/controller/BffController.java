@@ -10,11 +10,12 @@ import cl.sanos_y_salvos.ms_base.api.dto.UserDTO;
 import cl.sanos_y_salvos.ms_base.api.service.AuthService;
 import cl.sanos_y_salvos.ms_base.api.service.PetService;
 import cl.sanos_y_salvos.ms_base.api.service.UserService;
-
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/v1/bff/web")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.PUT, RequestMethod.DELETE})
 public class BffController {
 
     private final AuthService authService;
