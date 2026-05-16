@@ -17,19 +17,19 @@ public class SecurityConfig {
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/v1/pet-types/**").permitAll() 
-                .requestMatchers("/api/v1/pets/**").permitAll() 
-                .requestMatchers("/api/v1/bff/web/login").permitAll()  
-                .requestMatchers("/api/v1/bff/web/users").permitAll()  
-                .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults());
-        
-        return http.build();
+    http
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(authz -> authz
+            .requestMatchers("/api/v1/pet-types/**").permitAll() 
+            .requestMatchers("/api/v1/pets/**").permitAll() 
+            .requestMatchers("/api/v1/bff/web/login").permitAll()  
+            .requestMatchers("/api/v1/bff/web/users").permitAll()  
+            .anyRequest().permitAll() // 👈 CAMBIA ESTO A permitAll() TEMPORALMENTE PARA LA DEMO
+        );
+        // ❌ BORRAMOS LA LÍNEA DE HTTP BASIC QUE CREABA EL CONFLICTO
+    
+    return http.build();
     }
 
     @Bean
