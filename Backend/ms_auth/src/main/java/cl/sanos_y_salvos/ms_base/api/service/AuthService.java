@@ -2,6 +2,7 @@ package cl.sanos_y_salvos.ms_base.api.service;
 
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthUserDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,14 +15,17 @@ public class AuthService {
         this.restTemplate = restTemplate;
     }
 
-    public String login(LoginRequestDTO loginRequest) {
+    public AuthResponseDTO login(LoginRequestDTO loginRequest) {
         String url = "http://ms-usuarios:8081/api/v1/users/auth-info?email=" + loginRequest.getEmail();
 
         try {
             AuthUserDTO user = restTemplate.getForObject(url, AuthUserDTO.class);
 
             if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
-                return "TOKEN_SIMULADO_EXITOSO_ID_" + user.getId();
+                
+                String tokenGenerado = "TOKEN_SIMULADO_EXITOSO_ID_" + user.getId();
+                
+                return new AuthResponseDTO(tokenGenerado, user.getEmail());
             }
             
         } catch (Exception e) {
