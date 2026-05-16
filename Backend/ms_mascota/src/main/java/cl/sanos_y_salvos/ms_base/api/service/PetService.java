@@ -60,6 +60,7 @@ public class PetService {
         entity.setName(dto.getName());
         entity.setAgeCategory(dto.getAgeCategory());
         entity.setTypeId(dto.getTypeId());
+        entity.setUserId(dto.getUserId());
         entity.setLastSeenLocation(dto.getLastSeenLocation());
         entity.setLastSeenDate(dto.getLastSeenDate());
         entity.setColor(dto.getColor());
@@ -74,6 +75,7 @@ public class PetService {
         dto.setName(entity.getName());
         dto.setAgeCategory(entity.getAgeCategory());
         dto.setTypeId(entity.getTypeId());
+        dto.setUserId(entity.getUserId());
         dto.setLastSeenLocation(entity.getLastSeenLocation());
         dto.setLastSeenDate(entity.getLastSeenDate());
         dto.setColor(entity.getColor());
@@ -86,6 +88,7 @@ public class PetService {
         entity.setName(dto.getName());
         entity.setAgeCategory(dto.getAgeCategory());
         entity.setTypeId(dto.getTypeId());
+        entity.setUserId(dto.getUserId());
         entity.setLastSeenLocation(dto.getLastSeenLocation());
         entity.setLastSeenDate(dto.getLastSeenDate());
         entity.setColor(dto.getColor());

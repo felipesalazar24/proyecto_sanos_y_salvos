@@ -68,20 +68,20 @@ public class BffController {
     }
 
     // --- ENDPOINTS MASCOTAS ---
-    @GetMapping("/Pets")
+    @GetMapping("/pets")
     public ResponseEntity<List<PetDTO>> getAllPets() {
         return ResponseEntity.ok(petService.findAllPets());
     }
 
-    @PostMapping("/Pets")
+    @PostMapping("/pets")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO pet) {
         return ResponseEntity.ok(petService.savePet(pet));
     }
 
     // --- ENDPOINTS TIPO MASCOTA ---
-    @GetMapping("/pet-types")
-    public ResponseEntity<List<PetTypeDTO>> getAllTypes() {
-        return ResponseEntity.ok(petService.findAllTypes());
+    @GetMapping("/pet-types/{id}")
+    public ResponseEntity<PetTypeDTO> getPetTypeById(@PathVariable Long id) {
+        return ResponseEntity.ok(petService.getPetTypeById(id));
     }
 
     @PostMapping("/pet-types")

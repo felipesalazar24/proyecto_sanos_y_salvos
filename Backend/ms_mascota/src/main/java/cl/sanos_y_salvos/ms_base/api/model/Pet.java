@@ -29,6 +29,9 @@ public class Pet {
     @Column(name = "type_id", nullable = false)
     private String typeId;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(name = "last_Seen_Location", length = 100)
     private String lastSeenLocation;
 

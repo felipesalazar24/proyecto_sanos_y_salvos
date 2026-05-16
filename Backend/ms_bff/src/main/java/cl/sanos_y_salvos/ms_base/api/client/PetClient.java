@@ -35,9 +35,8 @@ public class PetClient {
     }
 
     // --- Métodos de Tipo Mascota ---
-    public List<PetTypeDTO> getAllTypes() {
-        PetTypeDTO[] response = restTemplate.getForObject(TIPO_URL, PetTypeDTO[].class);
-        return Arrays.asList(response != null ? response : new PetTypeDTO[0]);
+    public PetTypeDTO getPetTypeById(Long id) {
+        return restTemplate.getForObject(TIPO_URL + "/" + id, PetTypeDTO.class);
     }
 
     public PetTypeDTO createType(PetTypeDTO type) {
