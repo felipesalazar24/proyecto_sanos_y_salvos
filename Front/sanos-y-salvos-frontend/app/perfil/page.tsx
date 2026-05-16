@@ -1,40 +1,75 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  User, 
-  PawPrint, 
-  Bell, 
-  Settings, 
-  LogOut, 
+'use client';
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  User,
+  PawPrint,
+  Bell,
+  Settings,
+  LogOut,
   MapPin,
   Calendar,
   Edit,
   Eye
-} from "lucide-react"
-import { mockReports } from "@/lib/mock-data"
-import Link from "next/link"
+} from "lucide-react";
+import { mockReports } from "@/lib/mock-data";
+import Link from "next/link";
 
 export default function PerfilPage() {
-  // Simulated user data
-  const user = {
-    name: "María González",
-    email: "maria@email.com",
-    phone: "+56 9 1234 5678",
-    memberSince: "Enero 2026"
-  }
+  const router = useRouter();
 
-  // Filter reports by this user (simulated)
-  const userReports = mockReports.slice(0, 2)
-  const activeReports = userReports.filter(r => r.status === 'activo')
+  // 👇 Usuario cargado desde localStorage (guardado en login)
+  const [user, setUser] = useState<{ name: string, email: string, phone?: string, memberSince?: string } | null>(null);
+
+  useEffect(() => {
+    // Simulación: Lee usuario desde localStorage (puedes mejorar para usar contexto/global store/JWT decode)
+    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("user_email"); // Guarda este dato en el login
+    const name = localStorage.getItem("user_name");   // Igual, debería ser llenado en login
+    // Extra: podrías guardar un objeto stringificado con más datos en el login
+
+    // Si no hay token, redirección a login
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    setUser({
+      name: name || "Usuario",
+      email: email || "",
+      phone: "+56 9 1234 5678",     // Simula/ajusta según tus datos
+      memberSince: "Enero 2026"     // Simula/ajusta según tus datos
+    });
+  }, [router]);
+
+  // 👇 Handler para cerrar sesión
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_name');
+    // Quita otros datos si los guardaste
+    router.push('/login');
+  };
+
+  // Puedes dejar esta simulación, pero lo ideal es traer reportes del usuario autenticado
+  const userReports = mockReports.slice(0, 2);
+  const activeReports = userReports.filter(r => r.status === 'activo');
+
+  // Mientras carga el user
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Header */}
@@ -179,7 +214,7 @@ export default function PerfilPage() {
                   </Card>
                 ))
               )}
-              
+
               <Link href="/reportar">
                 <Button variant="outline" className="w-full gap-2">
                   <PawPrint className="h-4 w-4" />
@@ -253,23 +288,16 @@ export default function PerfilPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Seguridad</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Cambiar Contraseña
-                  </Button>
-                </CardContent>
-              </Card>
-
               <Card className="border-destructive/50">
                 <CardHeader>
                   <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button variant="outline" className="gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2 w-full sm:w-auto"
+                    onClick={handleLogout} // 👈 Aquí actúa el logout real
+                  >
                     <LogOut className="h-4 w-4" />
                     Cerrar Sesión
                   </Button>

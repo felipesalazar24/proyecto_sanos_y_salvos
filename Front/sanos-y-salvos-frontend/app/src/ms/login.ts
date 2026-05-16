@@ -1,23 +1,25 @@
-// src/ms/login.ts
+// src/app/ms/login.ts
 
-export interface LoginParams {
-  email: string;
-  password: string;
-}
+const LOGIN_URL = "http://localhost:8084/api/v1/bff/web/login";
 
-export interface LoginResponse {
-  token: string;
-  // Agrega otros campos del backend si aplica
-}
-
-export async function loginUser(params: LoginParams): Promise<LoginResponse> {
-  const response = await fetch('http://localhost:8084/api/v1/bff/web/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
+export async function loginUser({
+  email,
+  password,
+}: { email: string; password: string }) {
+  const response = await fetch(LOGIN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
   });
+
   if (!response.ok) {
-    throw new Error('Login fallido');
+    let message = "Error en login";
+    try {
+      const err = await response.json();
+      message = err.message || message;
+    } catch {}
+    throw new Error(message);
   }
-  return response.json();
+
+  return response.json(); // { token, email }
 }

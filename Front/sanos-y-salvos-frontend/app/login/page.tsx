@@ -2,33 +2,27 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
+import { loginUser } from '../src/ms/login'; // Ajusta la ruta
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
+    setLoading(true);
     try {
-      const response = await fetch('http://localhost:8084/api/v1/bff/web/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Usuario o contraseña incorrectos');
-      }
-
-      const data = await response.json();
+      const data = await loginUser({ email, password });
       localStorage.setItem('token', data.token);
       router.push('/');
     } catch (err: any) {
       setError(err.message || 'Error en el login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,6 +47,7 @@ export default function LoginPage() {
               background: '#faf6f1',
               width: '100%'
             }}
+            disabled={loading}
           />
         </div>
         <div style={{ marginBottom: 16 }}>
@@ -69,6 +64,7 @@ export default function LoginPage() {
               background: '#faf6f1',
               width: '100%'
             }}
+            disabled={loading}
           />
         </div>
         {error && (
@@ -84,8 +80,10 @@ export default function LoginPage() {
           border: 'none',
           borderRadius: 4,
           fontWeight: 600,
-        }}>
-          Iniciar sesión
+          opacity: loading ? 0.7 : 1,
+          cursor: loading ? 'not-allowed' : 'pointer'
+        }} disabled={loading}>
+          {loading ? 'Ingresando...' : 'Iniciar sesión'}
         </button>
       </form>
       <p style={{ marginTop: 24, textAlign: 'center' }}>
