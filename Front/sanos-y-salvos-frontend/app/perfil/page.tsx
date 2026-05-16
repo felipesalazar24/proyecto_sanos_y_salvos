@@ -22,48 +22,91 @@ import {
 import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
+// 👇 Importamos el helper que ya tienes listo en tu proyecto
+import { getUserById } from "@/app/src/ms/users";
+
+// Definimos la interfaz para TypeScript según los datos reales
+interface UserData {
+  name: string;
+  email: string;
+  phone: string;
+}
+
 export default function PerfilPage() {
   const router = useRouter();
 
-  // 👇 Usuario cargado desde localStorage (guardado en login)
-  const [user, setUser] = useState<{ name: string, email: string, phone?: string, memberSince?: string } | null>(null);
+  // Estados para controlar la información del usuario, la carga y posibles errores
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulación: Lee usuario desde localStorage (puedes mejorar para usar contexto/global store/JWT decode)
     const token = localStorage.getItem("token");
-    const email = localStorage.getItem("user_email"); // Guarda este dato en el login
-    const name = localStorage.getItem("user_name");   // Igual, debería ser llenado en login
-    // Extra: podrías guardar un objeto stringificado con más datos en el login
 
-    // Si no hay token, redirección a login
+    // Si no hay token, redirección inmediata a login
     if (!token) {
       router.push("/login");
       return;
     }
-    setUser({
-      name: name || "Usuario",
-      email: email || "",
-      phone: "+56 9 1234 5678",     // Simula/ajusta según tus datos
-      memberSince: "Enero 2026"     // Simula/ajusta según tus datos
-    });
+
+    const cargarDatosUsuario = async () => {
+      try {
+        setLoading(true);
+
+        // Extraer el ID que está al final del token (funciona si se separa por '.', '-' o '_')
+        const partes = token.split(/[._-]/);
+        const userId = partes[partes.length - 1];
+
+        if (!userId) {
+          throw new Error("No se pudo extraer un ID de usuario válido desde el token.");
+        }
+
+        // Llamamos a tu función CRUD pasando el ID extraído
+        const datosBD = await getUserById(userId);
+
+        // Mapeamos los datos de tu BDD a las propiedades que requiere el componente frontend
+        setUser({
+          name: datosBD.name || datosBD.nombre || "Usuario",
+          email: datosBD.email || "",
+          phone: datosBD.phone || datosBD.telefono || "+56 9 1234 5678"
+        });
+
+      } catch (err: any) {
+        console.error("Error al cargar perfil desde la BDD:", err);
+        setError(err.message || "Error al conectar con el servicio de usuarios");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatosUsuario();
   }, [router]);
 
-  // 👇 Handler para cerrar sesión
+  // Handler para cerrar sesión
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
-    // Quita otros datos si los guardaste
     router.push('/login');
   };
 
-  // Puedes dejar esta simulación, pero lo ideal es traer reportes del usuario autenticado
+  // Simulación para reportes (puedes adaptarlo en el futuro para usar datos reales)
   const userReports = mockReports.slice(0, 2);
   const activeReports = userReports.filter(r => r.status === 'activo');
 
-  // Mientras carga el user
-  if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+  // Vista intermedia: Mientras los datos viajan desde tu base de datos
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando perfil desde el servidor...</div>;
+  }
+
+  // Vista de error: Por si el ID es incorrecto o tu API falla
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-destructive font-semibold">Ocurrió un error: {error}</p>
+        <Button onClick={handleLogout}>Volver al Login</Button>
+      </div>
+    );
   }
 
   return (
@@ -80,9 +123,8 @@ export default function PerfilPage() {
                   <User className="h-10 w-10 text-primary" />
                 </div>
                 <div className="text-center sm:text-left flex-1">
-                  <h1 className="text-2xl font-bold">{user.name}</h1>
-                  <p className="text-muted-foreground">{user.email}</p>
-                  <p className="text-sm text-muted-foreground">Miembro desde {user.memberSince}</p>
+                  <h1 className="text-2xl font-bold">{user?.name}</h1>
+                  <p className="text-muted-foreground">{user?.email}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
@@ -266,22 +308,19 @@ export default function PerfilPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* 👇 Grid simplificada sin la fecha de miembro */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <p className="text-sm text-muted-foreground">Nombre</p>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user?.name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{user.email}</p>
+                      <p className="font-medium">{user?.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <p className="font-medium">{user.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Miembro desde</p>
-                      <p className="font-medium">{user.memberSince}</p>
+                      <p className="font-medium">{user?.phone}</p>
                     </div>
                   </div>
                   <Button variant="outline">Editar Información</Button>
@@ -296,7 +335,7 @@ export default function PerfilPage() {
                   <Button
                     variant="outline"
                     className="gap-2 w-full sm:w-auto"
-                    onClick={handleLogout} // 👈 Aquí actúa el logout real
+                    onClick={handleLogout}
                   >
                     <LogOut className="h-4 w-4" />
                     Cerrar Sesión

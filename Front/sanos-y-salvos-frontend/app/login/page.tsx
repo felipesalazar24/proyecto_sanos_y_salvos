@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '../src/ms/login'; // Ajusta la ruta
+
+const LOGIN_URL = "http://localhost:8084/api/v1/bff/web/login";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -13,12 +15,25 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     setLoading(true);
+
     try {
-      const data = await loginUser({ email, password });
+      const response = await fetch(LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Usuario o contraseña incorrectos');
+      }
+
+      const data = await response.json();
+      // Solo guarda el token:
       localStorage.setItem('token', data.token);
-      router.push('/');
+      // No guardes el id aquí ya que no viene
+
+      router.push('/perfil'); // O la ruta a tu página de perfil
     } catch (err: any) {
       setError(err.message || 'Error en el login');
     } finally {
@@ -27,68 +42,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      maxWidth: 400, margin: '60px auto', padding: 32,
-      border: '1.5px solid #bc8a5f', borderRadius: 10, background: '#fff', boxShadow: '0 2px 16px rgba(188,138,95,0.1)'
-    }}>
-      <h2 style={{ textAlign: 'center', color: '#bc8a5f', marginBottom: 24 }}>Iniciar sesión</h2>
+    <div className="max-w-md mx-auto mt-16 p-6 border rounded">
+      <h2 className="text-2xl font-bold text-center mb-4">Iniciar sesión</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-3">
           <label>Correo electrónico:</label>
           <input
             type="email"
             value={email}
+            autoFocus
             onChange={e => setEmail(e.target.value)}
             required
-            style={{
-              border: '2px solid #bc8a5f',
-              borderRadius: 4,
-              padding: 8,
-              background: '#faf6f1',
-              width: '100%'
-            }}
+            className="w-full border rounded p-2"
             disabled={loading}
           />
         </div>
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-3">
           <label>Contraseña:</label>
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
-            style={{
-              border: '2px solid #bc8a5f',
-              borderRadius: 4,
-              padding: 8,
-              background: '#faf6f1',
-              width: '100%'
-            }}
+            className="w-full border rounded p-2"
             disabled={loading}
           />
         </div>
-        {error && (
-          <div style={{ color: '#c1440e', marginBottom: 16, textAlign: 'center' }}>
-            {error}
-          </div>
-        )}
-        <button type="submit" style={{
-          width: '100%',
-          padding: 10,
-          background: '#bc8a5f',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          fontWeight: 600,
-          opacity: loading ? 0.7 : 1,
-          cursor: loading ? 'not-allowed' : 'pointer'
-        }} disabled={loading}>
+        {error && <div className="text-red-600 mb-3 text-center">{error}</div>}
+        <button
+          type="submit"
+          className="w-full py-2 bg-[#bc8a5f] text-white font-semibold rounded mt-2"
+          disabled={loading}
+        >
           {loading ? 'Ingresando...' : 'Iniciar sesión'}
         </button>
       </form>
-      <p style={{ marginTop: 24, textAlign: 'center' }}>
+      <p className="mt-6 text-center">
         ¿No tienes cuenta?{' '}
-        <a href="/register" style={{ color: '#bc8a5f', textDecoration: 'underline' }}>
+        <a href="/register" className="text-[#bc8a5f] underline">
           Crear cuenta
         </a>
       </p>
