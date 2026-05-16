@@ -21,8 +21,8 @@ public class PetService {
     
     public PetDTO savePet(PetDTO Pet) { return petClient.createPet(Pet); }
 
-    public List<PetTypeDTO> findAllTypes() { return petClient.getAllTypes(); }
-    
+    public PetTypeDTO getPetTypeById(Long id) { return petClient.getPetTypeById(id); }
+
     public PetTypeDTO saveType(PetTypeDTO type) { return petClient.createType(type); }
 }
 
