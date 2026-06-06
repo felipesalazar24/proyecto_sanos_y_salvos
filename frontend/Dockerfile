@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -27,18 +27,18 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy built application from builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-# Expose port 3000
-EXPOSE 3000
+# Expose port 3005
+EXPOSE 3005
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (res) => { if (res.statusCode !== 200) throw new Error(res.statusCode) })"
+  CMD node -e "require('http').get('http://localhost:3005', (res) => { if (res.statusCode !== 200) throw new Error(res.statusCode) })"
 
 # Start the application
 CMD ["npm", "start"]
