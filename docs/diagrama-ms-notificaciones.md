@@ -13,4 +13,4 @@ graph TD
     %% Salida a proveedores exteranos
     MS_Notif -->|API Rest External| Email[Proveedor Email <br> SendGrid / Mailchimp]:::ext
     MS_Notif -->|API Rest External| Push[Servicio Push <br> Firebase Cloud Messaging]:::ext
-```mermaid
+```
