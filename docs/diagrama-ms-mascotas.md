@@ -15,4 +15,4 @@ graph TD
     
     %% Comunicación Asíncrona (Opcional pero recomendado para nota alta)
     MS_Mascotas -.->|Publica Evento: 'Mascota_Perdida'| Broker["Event Broker"]:::broker
-```mermaid
+```
