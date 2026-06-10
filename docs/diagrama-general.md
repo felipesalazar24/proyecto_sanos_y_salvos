@@ -1,4 +1,5 @@
 ```mermaid
+
 flowchart LR
  subgraph Clientes["Dispositivos Cliente"]
         App["Aplicación Web"]
@@ -31,7 +32,6 @@ flowchart LR
     BFF -- "4b. Registra/Busca Mascota" --> MS_Mascotas
     MS_User --> DB_User
     MS_Mascotas --> DB_Mascotas
-    Broker["Event Broker<br> RabbitMQ / Kafka"]
 
      App:::client
      Gateway:::gateway
@@ -44,12 +44,11 @@ flowchart LR
      DB_User:::db
      DB_Mascotas:::db
      SMTP:::ext
-     Broker:::broker
     classDef client fill:#f9f,stroke:#333,stroke-width:2px
     classDef gateway fill:#bbf,stroke:#333,stroke-width:2px
     classDef bff fill:#f96,stroke:#333,stroke-width:2px
     classDef ms fill:#bfb,stroke:#333,stroke-width:2px
     classDef db fill:#ffb,stroke:#333,stroke-width:1px
     classDef broker fill:#fbb,stroke:#333,stroke-width:2px
-    classDef ext fill:#ddd,stroke:#333,stroke-width:1px
-```mermaid    
+    classDef ext fill:#ddd,stroke:#333,stroke-width:1px 
+```
