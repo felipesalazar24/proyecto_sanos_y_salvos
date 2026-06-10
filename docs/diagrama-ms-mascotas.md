@@ -12,7 +12,4 @@ graph TD
     BFF -->|POST /mascotas Reportar| MS_Mascotas["Gestion de Mascotas
     ms-mascotas"]:::ms
     MS_Mascotas -->|Persistir Reporte| DB_Mascotas("Base de Datos Mascotas Reportes"):::db
-    
-    %% Comunicación Asíncrona (Opcional pero recomendado para nota alta)
-    MS_Mascotas -.->|Publica Evento: 'Mascota_Perdida'| Broker["Event Broker"]:::broker
 ```
