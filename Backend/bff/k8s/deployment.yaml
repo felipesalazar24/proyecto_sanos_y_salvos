@@ -1,11 +1,11 @@
-# Deployment del microservicio de autenticación.
+# Deployment del microservicio BFF (Capa Perimetral).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bff
   namespace: microservicios
 spec:
-  replicas: 2
+  replicas: 2 # Alta disponibilidad activa para la frontera de la app
   selector:
     matchLabels:
       app: bff
@@ -23,32 +23,38 @@ spec:
           env:
             - name: PORT
               value: "8084"
+            # Redirección interna a través de los Services de Kubernetes:
             - name: AUTH_URL
               value: "http://ms-auth:8083/api/v1/auth/login"
-            # Conexión a PostgreSQL (DNS interno de Kubernetes).
+            - name: USERS_URL
+              value: "http://ms-usuarios:8081/api/v1/users"
+            - name: PETS_URL
+              value: "http://ms-mascotas:8082/api/v1/pets"
+          # Sondas de salud automatizadas vinculadas a Spring Actuator
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8084
-            initalDelaySeconds: 5
+            initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8084
-            initalDelaySeconds: 30
+            initialDelaySeconds: 30
             periodSeconds: 20
+          # Asignación y control estricto de recursos de hardware
           resources:
             requests:
               memory: "128Mi"
               cpu: "200m"
             limits:
-              memory: "521Mi"
+              memory: "512Mi" # Ajustado a potencia estándar de base 2
               cpu: "500m"
 
 ---
-# Service ClusterIP expuesto al Ingress en el puerto 8084.
+# Service ClusterIP encargado de acoplar el BFF con el Ingress Controller
 apiVersion: v1
 kind: Service
 metadata:
