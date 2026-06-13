@@ -22,7 +22,7 @@ services:
 
   ms-usuarios:
     build:
-      context: ./Backend/ms_usuario
+      context: ./Backend/ms-usuario
       dockerfile: Dockerfile
     container_name: ms_usuarios_app
     depends_on:
@@ -53,7 +53,7 @@ services:
 
   ms-auth:
     build:
-      context: ./Backend/ms_auth
+      context: ./Backend/ms-auth
       dockerfile: Dockerfile
     container_name: ms_auth_app
     depends_on:
@@ -73,7 +73,7 @@ services:
 
   ms-mascotas:
     build:
-      context: ./Backend/ms_mascota
+      context: ./Backend/ms-mascota
       dockerfile: Dockerfile
     container_name: ms_mascotas_app
     environment:
@@ -91,7 +91,7 @@ services:
     build:
       context: ./Backend/bff
       dockerfile: Dockerfile
-    container_name: ms_bff_app
+    container_name: bff_app
     depends_on:
       - ms-auth
       - ms-usuarios
@@ -103,7 +103,22 @@ services:
       - "8084:8084"
     networks:
       - sanos-y-salvos-network
-
+    
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 networks:
   sanos-y-salvos-network:
     driver: bridge

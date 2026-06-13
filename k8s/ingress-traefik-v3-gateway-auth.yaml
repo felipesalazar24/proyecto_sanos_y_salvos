@@ -1,0 +1,51 @@
+# Ingress actualizado para la Fase 6 del laboratorio.
+# Extiende la Fase 5 agregando el auth-service (JWT/PostgreSQL)
+# expuesto en /auth.
+#
+# Para aplicar este ingress (reemplaza al anterior):
+#   kubectl apply -f k8s/ingress-traefik-v3-gateway-auth.yaml
+#
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservicios-ingress
+  namespace: microservicios
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: micro.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                # Enrutamos /api al BFF (ms-bff) del proyecto.
+                name: bff
+                port:
+                  number: 8084
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: bff
+                port:
+                  number: 8084
+          # Auth tambien pasa por KrakenD para centralizar en API Gateway.
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                # El servicio de autenticacion expone endpoints de login.
+                name: ms-auth
+                port:
+                  number: 8083
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

@@ -1,0 +1,72 @@
+# PersistentVolumeClaim para datos de PostgreSQL del auth-service.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pets-postgres-pvc
+  namespace: microservicios
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Deployment de PostgreSQL para pets-service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pets-postgres
+  namespace: microservicios
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pets-postgres
+  template:
+    metadata:
+      labels:
+        app: pets-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_pets
+              valueFrom:
+                secretKeyRef:
+                  name: pets-secrets
+                  key: DB_pets
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pets-secrets
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pets-secrets
+                  key: DB_NAME
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pets-postgres-pvc
+---
+# Service ClusterIP para que pets-service pueda conectarse a postgres internamente.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pets-postgres
+  namespace: microservicios
+spec:
+  selector:
+    app: pets-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
