@@ -6,10 +6,14 @@ import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetTypeDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.UserDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
 import cl.sanos_y_salvos.ms_base.api.service.AuthService;
 import cl.sanos_y_salvos.ms_base.api.service.PetService;
 import cl.sanos_y_salvos.ms_base.api.service.UserService;
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 
@@ -30,15 +34,16 @@ public class BffController {
 
     // --- AUTH ---
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest){
-        try {
-            AuthResponseDTO response = authService.login(loginRequest);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Login failed: " + e.getMessage());
-        }
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+        AuthResponseDTO response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerRequest) {
+        AuthResponseDTO response = authService.register(registerRequest);
+        return ResponseEntity.ok(response);
+    }
 
     // --- USUARIOS ---
     

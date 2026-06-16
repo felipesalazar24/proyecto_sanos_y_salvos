@@ -1,21 +1,24 @@
 package cl.sanos_y_salvos.ms_base.api.client;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
-@Component
-public class AuthClient {
-    
-    private final RestTemplate restTemplate;
-    private final String authServiceUrl = "http://ms-auth:8083/api/v1/auth/login";
+@FeignClient(name = "ms-auth", url = "${endpoints.ms-auth}")
+public interface AuthClient {
 
-    public AuthClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
+    @PostMapping("/api/v1/auth/login")
+    AuthResponseDTO login(@RequestBody LoginRequestDTO loginRequest);
 
-    public AuthResponseDTO callLogin(LoginRequestDTO request) {
-        return restTemplate.postForObject(authServiceUrl, request, AuthResponseDTO.class);
-    }
+    @PostMapping("/api/v1/auth/register")
+    AuthResponseDTO register(@RequestBody RegisterRequestDTO registerRequest);
+
+    @GetMapping("/api/v1/auth/validate")
+    ValidateResponse validateToken(@RequestHeader("Authorization") String token);
 }
