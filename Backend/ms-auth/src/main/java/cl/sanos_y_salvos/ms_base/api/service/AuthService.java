@@ -1,36 +1,69 @@
 package cl.sanos_y_salvos.ms_base.api.service;
 
+import cl.sanos_y_salvos.ms_base.api.controller.AuthController;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
-import cl.sanos_y_salvos.ms_base.api.dto.AuthUserDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
+import cl.sanos_y_salvos.ms_base.api.model.UserAccount;
+import cl.sanos_y_salvos.ms_base.api.repository.AuthRepository;
+import java.time.Instant;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
 
-    private final RestTemplate restTemplate;
+    private final AuthController authController;
+    private final AuthRepository authRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public AuthService(
+        AuthRepository authRepository,
+        PasswordEncoder passwordEncoder,
+        JwtService jwtService, AuthController authController
+    ) {
+        this.authRepository = authRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authController = authController;
     }
 
-    public AuthResponseDTO login(LoginRequestDTO loginRequest) {
-        String url = "http://ms-usuarios:8081/api/v1/users/auth-info?email=" + loginRequest.getEmail();
-
-        try {
-            AuthUserDTO user = restTemplate.getForObject(url, AuthUserDTO.class);
-
-            if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
-                
-                String tokenGenerado = "TOKEN_SIMULADO_EXITOSO_ID_" + user.getId();
-                
-                return new AuthResponseDTO(tokenGenerado, user.getEmail());
-            }
-            
-        } catch (Exception e) {
-            throw new RuntimeException("Error: Usuario no encontrado o servicio de usuarios fuera de línea");
+    @Transactional
+    public void register(RegisterRequest request) {
+        if (authRepository.existsByEmailIgnoreCase(request.email())) {
+            throw new IllegalArgumentException("Email already in use");
         }
-        throw new RuntimeException("Credenciales incorrectas");
+
+        UserAccount user = new UserAccount();
+        user.setName(request.name().trim());
+        user.setLastName(request.lastName().trim());
+        user.setEmail(request.email().trim().toLowerCase());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPhoneNumber(request.phoneNumber());
+        user.setAddress(request.address().trim());
+        user.setAddressNumber(request.addressNumber());
+        user.setCity(request.city());
+        user.setCountry(request.country());
+        user.setRole("user");
+        user.setEnabled(true);
+        user.setCreatedAt(Instant.now());
+
+        authRepository.save(user);
+    }
+    
+    @Transactional(readOnly = true)
+    public AuthResponseDTO login(LoginRequestDTO request) {
+        UserAccount user = authRepository.findByEmailIgnoreCase(request.email())
+            .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+
+        if (!Boolean.TRUE.equals(user.getEnabled()) || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+
+        String token = jwtService.generateAccessToken(user);
+        return new AuthResponseDTO(token, "Bearer", jwtService.getAccessTokenTtlSeconds());
     }
 }
