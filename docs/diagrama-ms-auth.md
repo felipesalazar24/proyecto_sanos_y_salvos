@@ -1,18 +1,12 @@
 ```mermaid
-graph TD
-    classDef client fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef gateway fill:#bbf,stroke:#333,stroke-width:2px;
-    classDef bff fill:#f96,stroke:#333,stroke-width:2px;
-    classDef ms fill:#bfb,stroke:#333,stroke-width:2px;
-    classDef db fill:#ffb,stroke:#333,stroke-width:1px;
+flowchart TB
+    BFF[bff] -->|Envía credenciales para login| AuthController[AuthController]
+    AuthController -->|Ejecuta lógica de login| AuthService[AuthService]
+    AuthService -->|Consulta usuario válido| UserClient[UserClient]
+    AuthService -->|Genera/valida token| TokenManager[JWT / Session Manager]
+    AuthService -->|Guarda o lee sesión| AuthRepo[AuthRepository]
 
-    Client[Clientes: Web]:::client -->|1. Login / Solicitud| Gateway[API Gateway]:::gateway
-    
-    %% Intercepción de Seguridad
-    Gateway -->|2. Validar Credenciales / Token| MS_Auth[ms-auth <br> Servicio Autenticación]:::ms
-    MS_Auth -->|3. Verificar / Guardar| DB_Auth[(Base de Datos <br> Auth / OAuth)]:::db
-    
-    %% Respuesta
-    MS_Auth -->|4. Retorna JWT / Estado| Gateway
-    Gateway -->|5. Permite paso con Token válido| BFF[Capa BFF]:::bff
+    UserClient -->|Solicita datos del usuario| USER[ms-usuario]
+    AuthRepo -->|Persistencia de auth| DB_AUTH[(DB Auth)]
+    TokenManager -->|Devuelve respuesta autenticada| AuthController
 ```
