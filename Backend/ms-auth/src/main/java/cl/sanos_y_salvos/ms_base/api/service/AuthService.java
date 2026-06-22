@@ -11,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Lazy;
 
 @Service
 public class AuthService {
@@ -23,13 +24,14 @@ public class AuthService {
     public AuthService(
         AuthRepository authRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService, AuthController authController
+        JwtService jwtService,@Lazy AuthController authController
     ) {
         this.authRepository = authRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authController = authController;
     }
+    
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -41,7 +43,7 @@ public class AuthService {
         user.setName(request.name().trim());
         user.setLastName(request.lastName().trim());
         user.setEmail(request.email().trim().toLowerCase());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPassword(passwordEncoder.encode(request.password().trim()));
         user.setPhoneNumber(request.phoneNumber());
         user.setAddress(request.address().trim());
         user.setAddressNumber(request.addressNumber());
@@ -59,7 +61,7 @@ public class AuthService {
         UserAccount user = authRepository.findByEmailIgnoreCase(request.email())
             .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
-        if (!Boolean.TRUE.equals(user.getEnabled()) || !passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (!Boolean.TRUE.equals(user.getEnabled()) || !passwordEncoder.matches(request.password().trim(), user.getPassword())) {
             throw new BadCredentialsException("Invalid email or password");
         }
 

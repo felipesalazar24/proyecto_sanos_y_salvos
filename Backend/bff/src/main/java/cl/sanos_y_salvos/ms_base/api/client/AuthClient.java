@@ -4,21 +4,53 @@ import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 
-@FeignClient(name = "ms-auth", url = "${endpoints.ms-auth}")
-public interface AuthClient {
+@Component
+public class AuthClient {
 
-    @PostMapping("/api/v1/auth/login")
-    AuthResponseDTO login(@RequestBody LoginRequestDTO loginRequest);
+    private final RestTemplate restTemplate;
+    private final String baseUrl;
 
-    @PostMapping("/api/v1/auth/register")
-    AuthResponseDTO register(@RequestBody RegisterRequestDTO registerRequest);
+    public AuthClient(RestTemplate restTemplate, @Value("${endpoints.ms-auth}") String baseUrl) {
+        this.restTemplate = restTemplate;
+        this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
 
-    @GetMapping("/api/v1/auth/validate")
-    ValidateResponse validateToken(@RequestHeader("Authorization") String token);
+    public AuthResponseDTO login(LoginRequestDTO loginRequest) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON); 
+        
+        HttpEntity<LoginRequestDTO> entity = new HttpEntity<>(loginRequest, headers);
+
+        return restTemplate.postForObject(baseUrl + "/api/v1/auth/login", entity, AuthResponseDTO.class);
+    }
+
+    public AuthResponseDTO register(RegisterRequestDTO registerRequest) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        HttpEntity<RegisterRequestDTO> entity = new HttpEntity<>(registerRequest, headers);
+
+        return restTemplate.postForObject(baseUrl + "/api/v1/auth/register", entity, AuthResponseDTO.class);
+    }
+
+    public ValidateResponse validateToken(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        return restTemplate.exchange(
+                baseUrl + "/api/v1/auth/validate",
+                HttpMethod.GET,
+                entity,
+                ValidateResponse.class
+        ).getBody();
+    }
 }

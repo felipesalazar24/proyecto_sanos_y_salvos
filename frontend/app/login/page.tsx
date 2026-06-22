@@ -19,21 +19,31 @@ export default function LoginPage() {
 
     try {
       const response = await fetch(LOGIN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        throw new Error('Usuario o contraseña incorrectos');
+        let message = "Usuario o contraseña incorrectos";
+        try {
+          const err = await response.json();
+          message = err.message || message;
+        } catch {}
+        throw new Error(message);
       }
 
       const data = await response.json();
-      // Solo guarda el token:
-      localStorage.setItem('token', data.token);
-      // No guardes el id aquí ya que no viene
 
-      router.push('/perfil'); // O la ruta a tu página de perfil
+      if (data && data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('email', data.email);
+        
+        console.log("¡Login exitoso con JWT Real!");
+        router.push('/perfil');
+      } else {
+        throw new Error('No se recibió un token válido del servidor');
+      }
     } catch (err: any) {
       setError(err.message || 'Error en el login');
     } finally {

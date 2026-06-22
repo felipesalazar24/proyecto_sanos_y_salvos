@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUser } from '../src/ms/users'; // Ajusta según dónde tengas tu helper
 
 const COUNTRY_CITY = {
   Argentina: [
@@ -117,6 +116,7 @@ const COUNTRY_CITY = {
   ]
 };
 
+const REGISTRO_URL = "http://localhost:8084/api/v1/bff/web/register";
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -174,12 +174,28 @@ export default function RegisterPage() {
     }
 
     try {
-      await createUser({
-        ...form,
-        role: 'user', // El backend espera esto aunque el usuario no lo vea ni edite
-        phoneNumber: Number(form.phoneNumber),
-        addressNumber: Number(form.addressNumber),
+      const response = await fetch(REGISTRO_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          role: 'user',
+          phoneNumber: Number(form.phoneNumber),
+          addressNumber: Number(form.addressNumber),
+        }),
       });
+
+      if (!response.ok) {
+        let message = 'Error en la creación de cuenta';
+        try {
+          const err = await response.json();
+          message = err.message || message;
+        } catch {}
+        throw new Error(message);
+      }
+
       setSuccess('¡Usuario creado exitosamente!');
       setTimeout(() => router.push('/login'), 1200);
     } catch (err: any) {

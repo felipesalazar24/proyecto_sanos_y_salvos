@@ -15,7 +15,7 @@ public class JwksController {
         this.rsaPublicJwk =rsaPublicJwk;
     }
 
-    @GetMapping("/.well-know/jwks.json")
+    @GetMapping("/.well-known/jwks.json")
     public Map<String, Object >jwks() {
         return new JWKSet(rsaPublicJwk.toPublicJWK()).toJSONObject();
     }

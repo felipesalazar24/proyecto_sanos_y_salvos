@@ -66,6 +66,16 @@ services:
       SERVER_PORT: 8083
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_FLYWAY_ENABLED: "false"
+      SPRING_MAIN_ALLOW_CIRCULAR_REFERENCES: "true"
+      JWT_ISSUER: "http://ms-auth:8083"
+      JWT_PRIVATE_KEY_PATH: "/run/keys/private_key.pem"
+      JWT_PUBLIC_KEY_PATH: "/run/keys/public_key.pem"
+      SECURITY_JWT_ISSUER: "http://ms-auth:8083"
+      SECURITY_JWT_PRIVATE_KEY_PATH: "/run/keys/private_key.pem"
+      SECURITY_JWT_PUBLIC_KEY_PATH: "/run/keys/public_key.pem"
+    volumes:
+      - ./private_key.pem:/run/keys/private_key.pem:ro
+      - ./public_key.pem:/run/keys/public_key.pem:ro
     ports:
       - "8083:8083"
     networks:
@@ -98,7 +108,11 @@ services:
       - ms-mascotas
     environment:
       SERVER_PORT: 8084
-      AUTH_SERVICE_URL: http://ms-auth:8083/api/v1/auth/login
+      AUTH_URL: "http://ms-auth:8083"
+      USERS_URL: "http://ms-usuarios:8081"
+      PETS_URL: "http://ms-mascotas:8082"
+      JWK_URI: "http://ms-auth:8083/.well-known/jwks.json"
+      ENDPOINTS_MS_AUTH: "http://ms-auth:8083"
     ports:
       - "8084:8084"
     networks:
@@ -119,6 +133,7 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+
 networks:
   sanos-y-salvos-network:
     driver: bridge

@@ -14,15 +14,21 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf((csrf) -> csrf.disable())
-            .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors(cors -> cors.disable()) 
+            .csrf(csrf -> csrf.disable()) 
+        
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll());
-
-        return http.build();
-    }
+                .requestMatchers("/.well-known/jwks.json").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/error").permitAll()
+                .anyRequest().authenticated()
+        );
+        
+    return http.build();
+}
 
     @Bean
     public PasswordEncoder passwordEncoder() {

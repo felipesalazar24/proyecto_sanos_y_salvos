@@ -2,22 +2,22 @@
 
 const BASE_URL = 'http://localhost:8084/api/v1/bff/web/users';
 
-// Configuración de credenciales BASIC AUTH
-const username = "admin";
-const password = "admin123";
-const basic =
-  typeof window !== "undefined"
-    ? window.btoa(`${username}:${password}`)
-    : Buffer.from(`${username}:${password}`).toString('base64');
-const AUTH_HEADER = { Authorization: `Basic ${basic}` };
+function getAuthHeader(): Record<string, string> {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem('token');
+    if (token) {
+      return { 'Authorization': `Bearer ${token}` };
+    }
+  }
+  return {};
+}
 
-// Crear un usuario
 export async function createUser(user: any) {
   const response = await fetch(BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...AUTH_HEADER,
+      ...getAuthHeader(), 
     },
     body: JSON.stringify(user),
   });
@@ -34,13 +34,12 @@ export async function createUser(user: any) {
   return response.json();
 }
 
-// Obtener todos los usuarios
 export async function getUsers() {
   const response = await fetch(BASE_URL, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      ...AUTH_HEADER,
+      ...getAuthHeader(),
     },
   });
 
@@ -62,7 +61,7 @@ export async function getUserById(id: number | string) {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      ...AUTH_HEADER,
+      ...getAuthHeader(),
     },
   });
 
@@ -84,7 +83,7 @@ export async function updateUser(id: number | string, user: any) {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      ...AUTH_HEADER,
+      ...getAuthHeader(),
     },
     body: JSON.stringify(user),
   });
@@ -107,7 +106,7 @@ export async function deleteUser(id: number | string) {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      ...AUTH_HEADER,
+      ...getAuthHeader(),
     },
   });
 
@@ -120,6 +119,5 @@ export async function deleteUser(id: number | string) {
     throw new Error(message);
   }
 
-  // Algunos endpoints devuelven 204 (sin contenido)
   return response.status === 204 ? {} : response.json();
 }
