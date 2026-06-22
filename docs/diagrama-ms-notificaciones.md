@@ -1,6 +1,6 @@
 ```mermaid
 flowchart TB
-    BFF[ms-bff] -->|Envía evento o solicitud de notificación| NotifController[NotificationController]
+    BFF[bff] -->|Envía evento o solicitud de notificación| NotifController[NotificationController]
     NotifController -->|Ejecuta lógica de negocio| NotifService[NotificationService]
 
     NotifService -->|Guarda mensaje en historial| NotifRepo[NotificationRepository]
