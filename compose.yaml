@@ -92,7 +92,7 @@ services:
       POSTGRES_USER: felipe_admin
       POSTGRES_PASSWORD: password123
     ports:
-      - "5434:5432" # 🚀 Puerto local 5434 para no chocar con Usuarios (5432) ni Auth (5433)
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_mascotas"]
       interval: 5s
@@ -122,6 +122,43 @@ services:
     networks:
       - sanos-y-salvos-network
 
+  db-notifications:
+    image: postgres:15-alpine
+    container_name: db_ms_notifications
+    environment:
+      POSTGRES_DB: db_notifications
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5435:5432" 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sanos-y-salvos-network
+
+  ms-notification:
+    build:
+      context: ./Backend/ms-notification
+      dockerfile: Dockerfile
+    container_name: ms_notification_app
+    depends_on:
+      db-notifications:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-notifications:5432/db_notifications
+      SPRING_DATASOURCE_USERNAME: felipe_admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      SERVER_PORT: 8085
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+    ports:
+      - "8085:8085"
+    networks:
+      - sanos-y-salvos-network
+
   ms-bff:
     build:
       context: ./Backend/bff
@@ -131,18 +168,20 @@ services:
       - ms-auth
       - ms-usuarios
       - ms-mascotas
+      - ms-notification
     environment:
       SERVER_PORT: 8084
       AUTH_URL: "http://ms-auth:8083"
       USERS_URL: "http://ms-usuarios:8081"
       PETS_URL: "http://ms-mascotas:8082"
+      NOTIFICATIONS_URL: "http://ms-notification:8085"
       JWK_URI: "http://ms-auth:8083/.well-known/jwks.json"
       ENDPOINTS_MS_AUTH: "http://ms-auth:8083"
     ports:
       - "8084:8084"
     networks:
       - sanos-y-salvos-network
-    
+      
   frontend:
     build:
       context: ./frontend
