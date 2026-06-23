@@ -81,6 +81,12 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
     }
 
+    public UserDto getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+        return entityToDto(user);
+    }
+
     private User dtoToEntity(UserDto dto) {
         User entity = new User();
         entity.setName(dto.getName());

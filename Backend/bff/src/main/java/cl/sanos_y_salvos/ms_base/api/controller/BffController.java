@@ -47,7 +47,12 @@ public class BffController {
     // --- USERS ---
     @GetMapping("/users/profile/auth-info")
     public ResponseEntity<UserDTO> getAuthInfo(@RequestParam String email) {
-        return ResponseEntity.ok(userService.findByEmail(email));
+        return ResponseEntity.ok(userService.findByEmailInfo(email));
+    }
+
+    @GetMapping("/users/profile")
+    public ResponseEntity<UserDTO> getUserProfile(@RequestParam String email) {
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @GetMapping("/users") 

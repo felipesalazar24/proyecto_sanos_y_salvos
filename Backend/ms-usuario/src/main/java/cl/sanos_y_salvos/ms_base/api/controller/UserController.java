@@ -60,6 +60,16 @@ public class UserController {
         }
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
+        try {
+            UserDto user = userService.getUserByEmail(email);
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     @GetMapping("/auth-info")
     public ResponseEntity<AuthUserDTO> getAuthInfo(@RequestParam String email) {
         return ResponseEntity.ok(userService.getAuthInfoByEmail(email));
