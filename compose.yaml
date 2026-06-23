@@ -33,7 +33,9 @@ services:
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8081
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
     ports:
       - "8081:8081"
     networks:
@@ -64,8 +66,9 @@ services:
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8083
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SPRING_MAIN_ALLOW_CIRCULAR_REFERENCES: "true"
       JWT_ISSUER: "http://ms-auth:8083"
       JWT_PRIVATE_KEY_PATH: "/run/keys/private_key.pem"
