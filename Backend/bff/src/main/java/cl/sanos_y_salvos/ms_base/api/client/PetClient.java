@@ -13,8 +13,9 @@ import java.util.List;
 public class PetClient {
     
     private final RestTemplate restTemplate;
-    private final String BASE_URL = "http://ms-mascota:8082/api/v1/pets";
-    private final String TIPO_URL = "http://ms-mascota:8082/api/v1/pet-types";
+    
+    private final String BASE_URL = "http://ms-mascotas:8082/api/v1/pets";
+    private final String TIPO_URL = "http://ms-mascotas:8082/api/v1/pet-types";
 
     public PetClient(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -35,6 +36,11 @@ public class PetClient {
     }
 
     // --- Métodos de Tipo Mascota ---
+    public List<PetTypeDTO> getAllPetTypes() {
+        PetTypeDTO[] response = restTemplate.getForObject(TIPO_URL, PetTypeDTO[].class);
+        return Arrays.asList(response != null ? response : new PetTypeDTO[0]);
+    }
+
     public PetTypeDTO getPetTypeById(Long id) {
         return restTemplate.getForObject(TIPO_URL + "/" + id, PetTypeDTO.class);
     }

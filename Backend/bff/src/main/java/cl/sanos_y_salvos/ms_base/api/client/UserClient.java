@@ -25,7 +25,11 @@ public class UserClient {
         return restTemplate.getForObject(BASE_URL + "/" + id, UserDTO.class);
     }
 
-    public UserDTO getByEmail(String email) {
+    public UserDTO getUserByEmail(String email) {
+        return restTemplate.getForObject(BASE_URL + "/email/" + email, UserDTO.class);
+    }
+
+    public UserDTO getByEmailInfo(String email) {
         return restTemplate.getForObject(BASE_URL + "/auth-info?email=" + email, UserDTO.class);
     }
 

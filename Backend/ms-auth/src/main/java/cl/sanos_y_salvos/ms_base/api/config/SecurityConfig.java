@@ -23,12 +23,18 @@ public class SecurityConfig {
         
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/.well-known/jwks.json").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/error").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
-        );
-        
-    return http.build();
-}
+            )
+            
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(org.springframework.security.config.Customizer.withDefaults())
+            );
+            
+        return http.build();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

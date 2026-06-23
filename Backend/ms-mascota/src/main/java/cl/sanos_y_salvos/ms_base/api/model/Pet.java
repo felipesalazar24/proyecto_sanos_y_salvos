@@ -27,7 +27,7 @@ public class Pet {
     private String ageCategory;
 
     @Column(name = "type_id", nullable = false)
-    private String typeId;
+    private Long typeId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;

@@ -33,7 +33,9 @@ services:
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8081
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
     ports:
       - "8081:8081"
     networks:
@@ -64,8 +66,9 @@ services:
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8083
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SPRING_MAIN_ALLOW_CIRCULAR_REFERENCES: "true"
       JWT_ISSUER: "http://ms-auth:8083"
       JWT_PRIVATE_KEY_PATH: "/run/keys/private_key.pem"
@@ -81,17 +84,39 @@ services:
     networks:
       - sanos-y-salvos-network
 
+  db-mascotas:
+    image: postgres:15-alpine
+    container_name: db_ms_mascotas
+    environment:
+      POSTGRES_DB: db_mascotas
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5434:5432" # 🚀 Puerto local 5434 para no chocar con Usuarios (5432) ni Auth (5433)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_mascotas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sanos-y-salvos-network
+
   ms-mascotas:
     build:
       context: ./Backend/ms-mascota
       dockerfile: Dockerfile
     container_name: ms_mascotas_app
+    depends_on:
+      db-mascotas:
+        condition: service_healthy 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ep-proud-firefly-aqkl84f5-pooler.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
-      SPRING_DATASOURCE_USERNAME: neondb_owner
-      SPRING_DATASOURCE_PASSWORD: npg_R2JwoAlkTa5m
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-mascotas:5432/db_mascotas
+      SPRING_DATASOURCE_USERNAME: felipe_admin
+      SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8082
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
     ports:
       - "8082:8082"
     networks:

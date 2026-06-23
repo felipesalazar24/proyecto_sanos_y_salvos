@@ -35,7 +35,7 @@ public class PetController {
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
         if(petDto.getName() == null || petDto.getName().isEmpty() ||
            petDto.getAgeCategory() == null || petDto.getAgeCategory().isEmpty() ||
-           petDto.getTypeId() == null || petDto.getTypeId().isEmpty() ||
+           petDto.getTypeId() == null || petDto.getTypeId() == 0 ||
            petDto.getLastSeenLocation() == null || petDto.getLastSeenLocation().isEmpty() ||
            petDto.getLastSeenDate() == null ||
            petDto.getColor() == null || petDto.getColor().isEmpty() ||
