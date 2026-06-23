@@ -8,14 +8,13 @@ import cl.sanos_y_salvos.ms_base.api.dto.PetDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetTypeDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.UserDTO;
-import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
 import cl.sanos_y_salvos.ms_base.api.service.AuthService;
 import cl.sanos_y_salvos.ms_base.api.service.PetService;
 import cl.sanos_y_salvos.ms_base.api.service.UserService;
 import jakarta.validation.Valid;
 
 import java.util.List;
-
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/bff/web")
@@ -46,7 +45,6 @@ public class BffController {
     }
 
     // --- USERS ---
-    
     @GetMapping("/users/profile/auth-info")
     public ResponseEntity<UserDTO> getAuthInfo(@RequestParam String email) {
         return ResponseEntity.ok(userService.findByEmail(email));
@@ -87,10 +85,19 @@ public class BffController {
 
     @PostMapping("/pets")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO pet) {
-        return ResponseEntity.ok(petService.savePet(pet));
+        PetDTO savedPet = petService.savePet(pet);
+        
+        System.out.println("[MS-NOTIFICATION MOCK] -> Enviando alerta masiva de mascota perdida: " + savedPet.getName());
+        
+        return ResponseEntity.ok(savedPet);
     }
 
     // --- ENDPOINTS PET TYPES ---
+    @GetMapping("/pet-types")
+    public ResponseEntity<List<PetTypeDTO>> getAllPetTypes() {
+        return ResponseEntity.ok(petService.findAllTypes()); 
+    }
+
     @GetMapping("/pet-types/{id}")
     public ResponseEntity<PetTypeDTO> getPetTypeById(@PathVariable Long id) {
         return ResponseEntity.ok(petService.getPetTypeById(id));
@@ -99,5 +106,14 @@ public class BffController {
     @PostMapping("/pet-types")
     public ResponseEntity<PetTypeDTO> createType(@RequestBody PetTypeDTO type) {
         return ResponseEntity.ok(petService.saveType(type));
+    }
+
+    @PostMapping("/notifications")
+    public ResponseEntity<Map<String, String>> sendManualNotification(@RequestBody Map<String, Object> payload) {
+        System.out.println("[MS-NOTIFICATION MOCK] -> Notificación manual procesada con éxito. Payload: " + payload);
+        return ResponseEntity.ok(Map.of(
+            "status", "SENT",
+            "message", "Alerta distribuida correctamente a los usuarios del sector."
+        ));
     }
 }

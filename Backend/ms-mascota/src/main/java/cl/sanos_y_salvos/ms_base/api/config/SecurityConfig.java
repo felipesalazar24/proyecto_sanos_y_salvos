@@ -16,7 +16,11 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/v1/pet-types/**").permitAll() 
-                .requestMatchers("/api/v1/pets/**").permitAll() 
+                .requestMatchers("/api/v1/pets/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", 
+                    "/swagger-ui/**", 
+                    "/swagger-ui.html"
+                ).permitAll() 
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults())
