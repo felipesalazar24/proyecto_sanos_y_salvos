@@ -18,16 +18,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", length = 30, unique = true,nullable = false)
+    @Column(name = "name", length = 30, unique = false,nullable = false)
     private String name;
 
-    @Column(name = "last_name", length = 30, unique = true, nullable = false)
+    @Column(name = "last_name", length = 30, unique = false, nullable = false)
     private String lastName;
 
-    @Column(name = "email", length = 30, unique = true, nullable = false)
+    @Column(name = "email", length = 255, unique = true, nullable = false)
     private String email;
     
-    @Column(name = "password", length = 30, nullable = false)
+    @Column(name = "password", length = 255, nullable = false)
     private String password;
     
     @Column(name = "phone_number", unique = true, nullable = false)

@@ -11,7 +11,7 @@ public class PetDTO {
     private Long id;
     private String name;
     private String ageCategory;
-    private String typeId;
+    private Long typeId;
     private Long userId;
     private String lastSeenLocation;
     private Date lastSeenDate;

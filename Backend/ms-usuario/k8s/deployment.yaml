@@ -1,0 +1,67 @@
+# Deployment del microservicio de autenticación.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-user
+  namespace: microservicios
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-user
+  template:
+    metadata:
+      labels:
+        app: ms-user
+    spec:
+      containers:
+        - name: ms-user
+          image: ms-user:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: PORT
+              value: "8081"
+            # Conexión a PostgreSQL (DNS interno de Kubernetes).
+            - name: DB_HOST
+              value: user-postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: DB_PASSWORD
+            # Clave para firmar/verificar los JWT.
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: JWT_SECRET
+            - name: JWT_EXPIRES
+              value: "24h"
+---
+# Service ClusterIP expuesto al Ingress en el puerto 8081.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-user
+  namespace: microservicios
+spec:
+  selector:
+    app: ms-user
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP

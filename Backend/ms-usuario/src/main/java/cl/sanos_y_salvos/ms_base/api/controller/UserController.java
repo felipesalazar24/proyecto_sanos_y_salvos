@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -33,13 +34,7 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
-        if(userDto.getName() == null || userDto.getName().isEmpty() ||
-           userDto.getLastName() == null || userDto.getLastName().isEmpty() ||
-           userDto.getEmail() == null || userDto.getEmail().isEmpty() ||
-           userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
 
         UserDto createdUser = userService.createUser(userDto);
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
@@ -60,6 +55,16 @@ public class UserController {
         try {
             userService.deleteUser(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
+        try {
+            UserDto user = userService.getUserByEmail(email);
+            return new ResponseEntity<>(user, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

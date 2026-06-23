@@ -12,28 +12,36 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
       const response = await fetch(LOGIN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        throw new Error('Usuario o contraseña incorrectos');
+        let message = "Usuario o contraseña incorrectos";
+        try {
+          const err = await response.json();
+          message = err.message || message;
+        } catch {}
+        throw new Error(message);
       }
 
       const data = await response.json();
-      // Solo guarda el token:
-      localStorage.setItem('token', data.token);
-      // No guardes el id aquí ya que no viene
 
-      router.push('/perfil'); // O la ruta a tu página de perfil
+      if (data && data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('email', data.email);
+        router.push('/profile');
+      } else {
+        throw new Error('No se recibió un token válido del servidor');
+      }
     } catch (err: any) {
       setError(err.message || 'Error en el login');
     } finally {
@@ -51,7 +59,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             autoFocus
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full border rounded p-2"
             disabled={loading}
@@ -62,7 +70,7 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full border rounded p-2"
             disabled={loading}
@@ -79,7 +87,7 @@ export default function LoginPage() {
       </form>
       <p className="mt-6 text-center">
         ¿No tienes cuenta?{' '}
-        <a href="/register" className="text-[#bc8a5f] underline">
+        <a href="/auth/register" className="text-[#bc8a5f] underline">
           Crear cuenta
         </a>
       </p>

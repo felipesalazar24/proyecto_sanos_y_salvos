@@ -1,11 +1,17 @@
 package cl.sanos_y_salvos.ms_base.api.controller;
 
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
 import cl.sanos_y_salvos.ms_base.api.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Lazy;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -13,24 +19,18 @@ public class AuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(@Lazy AuthService authService) {
         this.authService = authService;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
-        try {
-            AuthResponseDTO response = authService.login(loginRequest);
-            return ResponseEntity.ok(response);
-            
-        } catch (RuntimeException e) {
-            System.out.println("Error en Login: " + e.getMessage());
-        
-            if (e.getMessage().contains("Credenciales")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-        
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
