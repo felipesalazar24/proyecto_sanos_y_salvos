@@ -13,7 +13,7 @@ export async function loginUser({
   });
 
   if (!response.ok) {
-    let message = "Error en login";
+    let message = "Usuario o contraseña incorrectos";
     try {
       const err = await response.json();
       message = err.message || message;
@@ -21,5 +21,5 @@ export async function loginUser({
     throw new Error(message);
   }
 
-  return response.json(); // { token, email }
+  return response.json();
 }

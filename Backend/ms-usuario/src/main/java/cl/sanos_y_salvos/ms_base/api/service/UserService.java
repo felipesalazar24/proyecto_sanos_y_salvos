@@ -8,6 +8,7 @@ import cl.sanos_y_salvos.ms_base.api.repository.UserRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
@@ -16,6 +17,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; 
 
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -32,6 +36,10 @@ public class UserService {
     @Transactional
     public UserDto createUser(UserDto userDto) {
         User user = dtoToEntity(userDto);
+        
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
+        
         User savedUser = userRepository.save(user);
         return entityToDto(savedUser);
     }
@@ -42,6 +50,11 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con el id: " + id));
         
         updateEntityFromDto(existingUser, userDto);
+        
+        if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+            String hashedPassword = passwordEncoder.encode(userDto.getPassword());
+            existingUser.setPassword(hashedPassword);
+        }
         
         User updatedUser = userRepository.save(existingUser);
         return entityToDto(updatedUser);
@@ -68,12 +81,18 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
     }
 
+    public UserDto getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+        return entityToDto(user);
+    }
+
     private User dtoToEntity(UserDto dto) {
         User entity = new User();
         entity.setName(dto.getName());
         entity.setLastName(dto.getLastName());
         entity.setEmail(dto.getEmail());
-        entity.setPassword(dto.getPassword());
+        entity.setPassword(dto.getPassword()); 
         entity.setPhoneNumber(dto.getPhoneNumber());
         entity.setAddress(dto.getAddress());
         entity.setAddressNumber(dto.getAddressNumber());
@@ -103,7 +122,6 @@ public class UserService {
         entity.setName(dto.getName());
         entity.setLastName(dto.getLastName());
         entity.setEmail(dto.getEmail());
-        entity.setPassword(dto.getPassword());
         entity.setPhoneNumber(dto.getPhoneNumber());
         entity.setAddress(dto.getAddress());
         entity.setAddressNumber(dto.getAddressNumber());

@@ -8,15 +8,14 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { PawPrint, Menu, MapPin, Bell, Plus, User } from "lucide-react"
+import { PawPrint, Menu, MapPin, Plus, User } from "lucide-react"
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState<boolean>(false)
 
   const navigation = [
-    { name: "Mapa", href: "/mapa", icon: MapPin },
-    { name: "Reportar", href: "/reportar", icon: Plus },
-    { name: "Alertas", href: "/alertas", icon: Bell },
+    { name: "Mascotas", href: "/pets", icon: MapPin },
+    { name: "Reportar", href: "/create-report", icon: Plus },
   ]
 
   return (
@@ -29,7 +28,6 @@ export function Header() {
           <span className="text-lg font-semibold tracking-tight">Sanos y Salvos</span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navigation.map((item) => (
             <Link key={item.name} href={item.href}>
@@ -42,13 +40,13 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <Link href="/perfil">
+          <Link href="/profile">
             <Button variant="outline" size="sm" className="gap-2">
               <User className="h-4 w-4" />
               Mi Cuenta
             </Button>
           </Link>
-          <Link href="/reportar">
+          <Link href="/create-report">
             <Button size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
               Nuevo Reporte
@@ -56,7 +54,6 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Mobile Navigation */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -83,13 +80,13 @@ export function Header() {
               ))}
               
               <div className="border-t pt-4 mt-4 space-y-2">
-                <Link href="/perfil" onClick={() => setIsOpen(false)}>
+                <Link href="/profile" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full justify-start gap-2">
                     <User className="h-4 w-4" />
                     Mi Cuenta
                   </Button>
                 </Link>
-                <Link href="/reportar" onClick={() => setIsOpen(false)}>
+                <Link href="/create-report" onClick={() => setIsOpen(false)}>
                   <Button className="w-full justify-start gap-2">
                     <Plus className="h-4 w-4" />
                     Nuevo Reporte
