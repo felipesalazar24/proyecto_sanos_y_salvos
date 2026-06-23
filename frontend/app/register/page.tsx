@@ -116,7 +116,8 @@ const COUNTRY_CITY = {
   ]
 };
 
-const REGISTRO_URL = "http://localhost:8084/api/v1/bff/web/register";
+const REGISTRATION_URL = "http://localhost:8084/api/v1/bff/web/register";
+
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -137,7 +138,7 @@ export default function RegisterPage() {
 
   const MIN_PHONE_LENGTH = 8;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
     if (name === 'country') {
       setForm({
@@ -150,12 +151,11 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Validaciones front
     if (
       Object.values(form).some(f => f === '') ||
       form.country === '' ||
@@ -164,17 +164,19 @@ export default function RegisterPage() {
       setError('Todos los campos son obligatorios');
       return;
     }
+    
     if (!/^\d+$/.test(form.phoneNumber)) {
       setError('El teléfono solo debe contener números');
       return;
     }
+    
     if (form.phoneNumber.length < MIN_PHONE_LENGTH) {
       setError(`El teléfono debe tener al menos ${MIN_PHONE_LENGTH} dígitos`);
       return;
     }
 
     try {
-      const response = await fetch(REGISTRO_URL, {
+      const response = await fetch(REGISTRATION_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,13 +199,12 @@ export default function RegisterPage() {
       }
 
       setSuccess('¡Usuario creado exitosamente!');
-      setTimeout(() => router.push('/login'), 1200);
+      setTimeout(() => router.push('/auth/login'), 1200);
     } catch (err: any) {
       setError(err.message || 'Error en la creación');
     }
   };
 
-  // Quita flechas de los inputs numéricos
   const noSpinner = {
     MozAppearance: 'textfield' as const,
     WebkitAppearance: 'none' as const,
@@ -378,7 +379,7 @@ export default function RegisterPage() {
       </form>
       <p style={{ marginTop: 20, textAlign: 'center' }}>
         ¿Ya tienes cuenta?{' '}
-        <a href="/login" style={{ color: '#bc8a5f', textDecoration: 'underline' }}>Inicia sesión</a>
+        <a href="/auth/login" style={{ color: '#bc8a5f', textDecoration: 'underline' }}>Inicia sesión</a>
       </p>
     </div>
   );

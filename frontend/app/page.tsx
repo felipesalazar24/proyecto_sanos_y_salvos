@@ -31,7 +31,6 @@ export default function HomePage() {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background py-20 lg:py-32">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center space-y-6">
@@ -50,13 +49,13 @@ export default function HomePage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Link href="/reportar?type=perdido">
+                <Link href="/create-report?type=lost">
                   <Button size="lg" className="w-full sm:w-auto gap-2">
                     <PawPrint className="h-5 w-5" />
                     Perdí mi mascota
                   </Button>
                 </Link>
-                <Link href="/reportar?type=encontrado">
+                <Link href="/create-report?type=found">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2">
                     <Search className="h-5 w-5" />
                     Encontré una mascota
@@ -66,7 +65,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Stats Bar */}
           <div className="container mx-auto px-4 mt-16">
             <Card className="max-w-3xl mx-auto">
               <CardContent className="py-6">
@@ -89,7 +87,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How it Works */}
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -154,7 +151,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Recent Reports */}
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
@@ -162,7 +158,7 @@ export default function HomePage() {
                 <h2 className="text-3xl font-bold mb-2">Reportes Recientes</h2>
                 <p className="text-muted-foreground">Últimas mascotas reportadas en la plataforma</p>
               </div>
-              <Link href="/mapa">
+              <Link href="/pets">
                 <Button variant="outline" className="gap-2">
                   Ver todos
                   <ArrowRight className="h-4 w-4" />
@@ -178,7 +174,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features */}
         <section className="py-20 bg-muted/50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -240,7 +235,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
             <Card className="max-w-4xl mx-auto bg-primary text-primary-foreground">
@@ -253,16 +247,16 @@ export default function HomePage() {
                   te ayude a reunir a esa mascota con su familia.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/reportar">
+                  <Link href="/create-report">
                     <Button size="lg" variant="secondary" className="w-full sm:w-auto gap-2">
                       <PawPrint className="h-5 w-5" />
                       Crear Reporte
                     </Button>
                   </Link>
-                  <Link href="/mapa">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+                  <Link href="/pets">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
                       <MapPin className="h-5 w-5" />
-                      Ver Mapa
+                      Ver Mascotas
                     </Button>
                   </Link>
                 </div>
@@ -271,7 +265,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Partners */}
         <section className="py-12 border-t">
           <div className="container mx-auto px-4">
             <p className="text-center text-sm text-muted-foreground mb-6">

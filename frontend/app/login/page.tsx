@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -38,9 +38,7 @@ export default function LoginPage() {
       if (data && data.accessToken) {
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('email', data.email);
-        
-        console.log("¡Login exitoso con JWT Real!");
-        router.push('/perfil');
+        router.push('/profile');
       } else {
         throw new Error('No se recibió un token válido del servidor');
       }
@@ -61,7 +59,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             autoFocus
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full border rounded p-2"
             disabled={loading}
@@ -72,7 +70,7 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full border rounded p-2"
             disabled={loading}
@@ -89,7 +87,7 @@ export default function LoginPage() {
       </form>
       <p className="mt-6 text-center">
         ¿No tienes cuenta?{' '}
-        <a href="/register" className="text-[#bc8a5f] underline">
+        <a href="/auth/register" className="text-[#bc8a5f] underline">
           Crear cuenta
         </a>
       </p>
