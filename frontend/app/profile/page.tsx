@@ -22,91 +22,89 @@ import {
 import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
-// 👇 Importamos el helper que ya tienes listo en tu proyecto
-import { getUserByEmail } from "@/app/src/ms/users";
-
-// Definimos la interfaz para TypeScript según los datos reales
 interface UserData {
   name: string;
   email: string;
-  phone: string;
+  phoneNumber?: string;
+  address?: string;
+  addressNumber?: string;
+  city?: string;
+  country?: string;
+  createdAt?: string;
 }
 
-export default function PerfilPage() {
-  const router = useRouter();
+function parseJwt(token: string): Record<string, any> | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
-  // Estados para controlar la información del usuario, la carga y posibles errores
+export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
-      router.push("/login");
+      router.push("/auth/login");
       return;
     }
 
-    const cargarDatosUsuario = async () => {
-      try {
-        setLoading(true);
+    const payload = parseJwt(token);
+    const email = payload?.sub || payload?.email;
 
-        const partes = token.split('.');
-        if (partes.length < 2) throw new Error("Formato de token inválido");
+    if (!email) {
+      setError("No se encontró el email en el token.");
+      setLoading(false);
+      return;
+    }
 
-        const base64Url = partes[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(window.atob(base64));
+    setUser({
+      name: payload?.name || "Usuario",
+      email: email,
+      phoneNumber: payload?.phoneNumber || "N/A",
+      address: payload?.address || "N/A",
+      addressNumber: payload?.addressNumber || "N/A",
+      city: payload?.city || "N/A",
+      country: payload?.country || "N/A",
+    });
 
-        const userEmail = payload.sub;
-
-        if (!userEmail) {
-          throw new Error("No se pudo extraer el email del usuario desde el token.");
-        }
-
-        const datosBD = await getUserByEmail(userEmail);
-
-        setUser({
-          name: datosBD.name || datosBD.nombre || "Usuario",
-          email: datosBD.email || "",
-          phone: datosBD.phoneNumber || datosBD.telefono || "+56 9 1234 5678"
-        });
-
-      } catch (err: any) {
-        console.error("Error al cargar perfil desde la BDD:", err);
-        setError(err.message || "Error al conectar con el servicio de usuarios");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarDatosUsuario();
+    setLoading(false);
   }, [router]);
 
-  // Handler para cerrar sesión
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user_email');
-    localStorage.removeItem('user_name');
-    router.push('/login');
+    localStorage.removeItem('email');
+    router.push('/auth/login');
   };
 
-  // Simulación para reportes (puedes adaptarlo en el futuro para usar datos reales)
   const userReports = mockReports.slice(0, 2);
   const activeReports = userReports.filter(r => r.status === 'activo');
 
-  // Vista intermedia: Mientras los datos viajan desde tu base de datos
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando perfil desde el servidor...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">Cargando perfil...</div>
+    );
   }
 
-  // Vista de error: Por si el ID es incorrecto o tu API falla
-  if (error) {
+  if (error || !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-destructive font-semibold">Ocurrió un error: {error}</p>
-        <Button onClick={handleLogout}>Volver al Login</Button>
+      <div className="min-h-screen flex flex-col items-center justify-center text-red-600 gap-4">
+        <p>{error || "No se encontró el usuario."}</p>
+        <Button onClick={handleLogout}>Volver a login</Button>
       </div>
     );
   }
@@ -117,7 +115,6 @@ export default function PerfilPage() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Profile Header */}
           <Card>
             <CardContent className="py-6">
               <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -142,7 +139,6 @@ export default function PerfilPage() {
             </CardContent>
           </Card>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
@@ -170,7 +166,6 @@ export default function PerfilPage() {
             </Card>
           </div>
 
-          {/* Tabs */}
           <Tabs defaultValue="reports">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="reports" className="gap-2">
@@ -196,7 +191,7 @@ export default function PerfilPage() {
                     <p className="text-muted-foreground mb-4">
                       Crea tu primer reporte para comenzar a buscar o ayudar a reunir mascotas.
                     </p>
-                    <Link href="/reportar">
+                    <Link href="/create-report">
                       <Button>Crear Reporte</Button>
                     </Link>
                   </CardContent>
@@ -240,7 +235,7 @@ export default function PerfilPage() {
                               </div>
                             </div>
                             <div className="flex gap-2">
-                              <Link href={`/reporte/${report.id}`}>
+                              <Link href={`/report/${report.id}`}>
                                 <Button variant="outline" size="sm" className="gap-1">
                                   <Eye className="h-3 w-3" />
                                   Ver
@@ -259,7 +254,7 @@ export default function PerfilPage() {
                 ))
               )}
 
-              <Link href="/reportar">
+              <Link href="/create-report">
                 <Button variant="outline" className="w-full gap-2">
                   <PawPrint className="h-4 w-4" />
                   Crear Nuevo Reporte
@@ -306,14 +301,13 @@ export default function PerfilPage() {
                 <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
                   <CardDescription>
-                    Actualiza tu información de contacto.
+                    Aquí se muestra tu información de contacto.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* 👇 Grid simplificada sin la fecha de miembro */}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-sm text-muted-foreground">Nombre</p>
+                      <p className="text-sm text-muted-foreground">Nombre Completo</p>
                       <p className="font-medium">{user?.name}</p>
                     </div>
                     <div>
@@ -322,10 +316,33 @@ export default function PerfilPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <p className="font-medium">{user?.phone}</p>
+                      <p className="font-medium">{user?.phoneNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">País</p>
+                      <p className="font-medium">{user?.country}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dirección</p>
+                      <p className="font-medium">{user?.address} {user?.addressNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Ciudad</p>
+                      <p className="font-medium">{user?.city}</p>
                     </div>
                   </div>
                   <Button variant="outline">Editar Información</Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seguridad</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    Cambiar Contraseña
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -354,5 +371,5 @@ export default function PerfilPage() {
 
       <Footer />
     </div>
-  )
+  );
 }
