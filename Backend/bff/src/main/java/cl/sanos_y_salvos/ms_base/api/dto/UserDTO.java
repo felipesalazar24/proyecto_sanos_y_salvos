@@ -8,7 +8,7 @@ public class UserDTO {
     private String name;
     private String lastName;
     private String email;
-    private String password; // Solo se usa para el Create/Update
+    private String password;
     private int phoneNumber;
     private String address;
     private int addressNumber;

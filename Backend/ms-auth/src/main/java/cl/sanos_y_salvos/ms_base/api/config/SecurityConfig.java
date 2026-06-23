@@ -2,25 +2,36 @@ package cl.sanos_y_salvos.ms_base.api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity
+@SuppressWarnings("unused")
 
 public class SecurityConfig {
     
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.disable()) 
+            .csrf(csrf -> csrf.disable()) 
+        
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/**").permitAll()
+                .requestMatchers("/.well-known/jwks.json").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/error").permitAll()
                 .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults());
-        return http.build();
+        );
+        
+    return http.build();
+}
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
