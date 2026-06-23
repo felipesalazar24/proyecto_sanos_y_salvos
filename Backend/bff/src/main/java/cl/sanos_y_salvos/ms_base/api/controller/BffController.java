@@ -45,8 +45,13 @@ public class BffController {
         return ResponseEntity.ok(response);
     }
 
-    // --- USUARIOS ---
+    // --- USERS ---
     
+    @GetMapping("/users/profile/auth-info")
+    public ResponseEntity<UserDTO> getAuthInfo(@RequestParam String email) {
+        return ResponseEntity.ok(userService.findByEmail(email));
+    }
+
     @GetMapping("/users") 
     public ResponseEntity<List<UserDTO>> getAll() {
         return ResponseEntity.ok(userService.findAll());
@@ -74,7 +79,7 @@ public class BffController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- ENDPOINTS MASCOTAS ---
+    // --- ENDPOINTS PETS ---
     @GetMapping("/pets")
     public ResponseEntity<List<PetDTO>> getAllPets() {
         return ResponseEntity.ok(petService.findAllPets());
@@ -85,7 +90,7 @@ public class BffController {
         return ResponseEntity.ok(petService.savePet(pet));
     }
 
-    // --- ENDPOINTS TIPO MASCOTA ---
+    // --- ENDPOINTS PET TYPES ---
     @GetMapping("/pet-types/{id}")
     public ResponseEntity<PetTypeDTO> getPetTypeById(@PathVariable Long id) {
         return ResponseEntity.ok(petService.getPetTypeById(id));

@@ -121,3 +121,24 @@ export async function deleteUser(id: number | string) {
 
   return response.status === 204 ? {} : response.json();
 }
+
+export async function getUserByEmail(email: string) {
+  const response = await fetch(`${BASE_URL}/profile/auth-info?email=${email}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+    },
+  });
+
+  if (!response.ok) {
+    let message = 'Error obteniendo información de sesión';
+    try {
+      const err = await response.json();
+      message = err.message || message;
+    } catch {}
+    throw new Error(message);
+  }
+
+  return response.json();
+}

@@ -19,6 +19,8 @@ public class UserService {
     public List<UserDTO> findAll() { return userClient.getAll(); }
     
     public UserDTO findById(Long id) { return userClient.getById(id); }
+
+    public UserDTO findByEmail(String email) { return userClient.getByEmail(email); }
     
     public UserDTO save(UserDTO user) { return userClient.create(user); }
     

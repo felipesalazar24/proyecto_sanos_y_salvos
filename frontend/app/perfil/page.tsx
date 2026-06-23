@@ -23,7 +23,7 @@ import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
 // 👇 Importamos el helper que ya tienes listo en tu proyecto
-import { getUserById } from "@/app/src/ms/users";
+import { getUserByEmail } from "@/app/src/ms/users";
 
 // Definimos la interfaz para TypeScript según los datos reales
 interface UserData {
@@ -43,7 +43,6 @@ export default function PerfilPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // Si no hay token, redirección inmediata a login
     if (!token) {
       router.push("/login");
       return;
@@ -53,22 +52,25 @@ export default function PerfilPage() {
       try {
         setLoading(true);
 
-        // Extraer el ID que está al final del token (funciona si se separa por '.', '-' o '_')
-        const partes = token.split(/[._-]/);
-        const userId = partes[partes.length - 1];
+        const partes = token.split('.');
+        if (partes.length < 2) throw new Error("Formato de token inválido");
 
-        if (!userId) {
-          throw new Error("No se pudo extraer un ID de usuario válido desde el token.");
+        const base64Url = partes[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+
+        const userEmail = payload.sub;
+
+        if (!userEmail) {
+          throw new Error("No se pudo extraer el email del usuario desde el token.");
         }
 
-        // Llamamos a tu función CRUD pasando el ID extraído
-        const datosBD = await getUserById(userId);
+        const datosBD = await getUserByEmail(userEmail);
 
-        // Mapeamos los datos de tu BDD a las propiedades que requiere el componente frontend
         setUser({
           name: datosBD.name || datosBD.nombre || "Usuario",
           email: datosBD.email || "",
-          phone: datosBD.phone || datosBD.telefono || "+56 9 1234 5678"
+          phone: datosBD.phoneNumber || datosBD.telefono || "+56 9 1234 5678"
         });
 
       } catch (err: any) {

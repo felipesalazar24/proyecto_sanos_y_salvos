@@ -2,9 +2,7 @@ package cl.sanos_y_salvos.ms_base.api.client;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
 import cl.sanos_y_salvos.ms_base.api.dto.UserDTO;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,6 +23,10 @@ public class UserClient {
 
     public UserDTO getById(Long id) {
         return restTemplate.getForObject(BASE_URL + "/" + id, UserDTO.class);
+    }
+
+    public UserDTO getByEmail(String email) {
+        return restTemplate.getForObject(BASE_URL + "/auth-info?email=" + email, UserDTO.class);
     }
 
     public UserDTO create(UserDTO user) {
