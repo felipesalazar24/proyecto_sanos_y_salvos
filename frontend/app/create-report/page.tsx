@@ -27,6 +27,7 @@ export default function CreateReportPage() {
   const router = useRouter();
   const [userCity, setUserCity] = useState<string>('');
   const [userCountry, setUserCountry] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function CreateReportPage() {
     
     setUserCity(payload?.city || '');
     setUserCountry(payload?.country || '');
+    setUserId(payload?.id || payload?.sub || '');
     setLoading(false);
   }, [router]);
 
@@ -63,7 +65,7 @@ export default function CreateReportPage() {
             </p>
           </div>
 
-          <ReportForm userCity={userCity} userCountry={userCountry} />
+          <ReportForm userCity={userCity} userCountry={userCountry} userId={userId} />
         </div>
       </main>
 

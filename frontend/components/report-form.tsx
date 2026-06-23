@@ -41,11 +41,13 @@ const AGE_CATEGORIES = ['Joven', 'Adulto', 'Viejo'];
 interface ReportFormProps {
   userCountry?: string;
   userCity?: string;
+  userId: string;
 }
 
 export function ReportForm({ 
   userCountry = 'Chile',
-  userCity = ''
+  userCity = '',
+  userId
 }: ReportFormProps) {
   const [status, setStatus] = useState<'extraviado' | 'encontrado'>('extraviado');
   const [animalType, setAnimalType] = useState<string>('perro');
@@ -61,32 +63,50 @@ export function ReportForm({
     setSuccess('');
     setIsSubmitting(true);
 
-    try {
-      const formData = new FormData(e.currentTarget);
-      const data = {
-        name: formData.get('petName') || 'Desconocido',
-        ageCategory: formData.get('ageCategory'),
-        type: animalType,
-        breed: breed,
-        color: formData.get('color'),
-        description: formData.get('description'),
-        lastSeenLocation: formData.get('lastSeenLocation'),
-        lastSeenDate: formData.get('lastSeenDate'),
-        status: status,
-        contactName: formData.get('contactName'),
-        contactPhone: formData.get('contactPhone'),
-        contactEmail: formData.get('contactEmail') || null,
-      };
+    const formData = new FormData(e.currentTarget);
+    const commune = formData.get('lastSeenLocation') as string;
+    const fullLocation = `${userCountry}, ${userCity}, ${commune}`;
 
-      console.log('Report data:', data);
-      setSuccess('Reporte enviado exitosamente. Te notificaremos si encontramos coincidencias.');
-      
+    const reportPayload = {
+      name: petName || 'Desconocido',
+      age_category: (formData.get('ageCategory') as string) || 'adulto',
+      type_id: `${animalType}-${breed || 'Otro'}`,
+      user_id: userId,
+      last_seen_location: fullLocation,
+      last_seen_date: formData.get('lastSeenDate') as string,
+      color: formData.get('color') as string,
+      description: formData.get('description') as string,
+      status: status,
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch('http://localhost:8084/api/v1/bff/web/pets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(reportPayload),
+      });
+
+      if (!response.ok) {
+        let message = 'Error creating report';
+        try {
+          const err = await response.json();
+          message = err.message || message;
+        } catch {}
+        throw new Error(message);
+      }
+
+      setSuccess('Report successfully submitted.');
       e.currentTarget.reset();
       setPetName('');
       setBreed('');
       setAnimalType('perro');
     } catch (err: any) {
-      setError(err.message || 'Error al enviar el reporte');
+      setError(err.message || 'Error sending report');
     } finally {
       setIsSubmitting(false);
     }
@@ -300,47 +320,6 @@ export function ReportForm({
               defaultValue={new Date().toISOString().split('T')[0]}
               required
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Información de Contacto</CardTitle>
-          <CardDescription>
-            Tus datos estarán protegidos y solo se compartirán cuando haya una coincidencia verificada.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="contactName">Nombre completo</Label>
-            <Input
-              id="contactName"
-              name="contactName"
-              placeholder="Tu nombre"
-              required
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="contactPhone">Teléfono</Label>
-              <Input
-                id="contactPhone"
-                name="contactPhone"
-                type="tel"
-                placeholder="+56 9 1234 5678"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactEmail">Email (Opcional)</Label>
-              <Input
-                id="contactEmail"
-                name="contactEmail"
-                type="email"
-                placeholder="tu@email.com"
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
