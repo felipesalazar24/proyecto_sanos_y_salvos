@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pet-postgres-pvc
+  name: notification-postgres-pvc
   namespace: microservicios
 spec:
   accessModes:
@@ -13,21 +13,21 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pet-postgres
+  name: notification-postgres
   namespace: microservicios
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pet-postgres
+      app: notification-postgres
   template:
     metadata:
       labels:
-        app: pet-postgres
+        app: notification-postgres
   template:
     metadata:
       labels:
-        app: pet-postgres
+        app: notification-postgres
     spec:
       containers:
         - name: postgres
@@ -39,17 +39,17 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: pet-secrets
+                  name: notification-secrets
                   key: DB_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pet-secrets
+                  name: notification-secrets
                   key: DB_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: pet-secrets
+                  name: notification-secrets
                   key: DB_NAME
           volumeMounts:
             - name: data
@@ -57,16 +57,16 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: pet-postgres-pvc
+            claimName: notification-postgres-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: pet-postgres
+  name: notification-postgres
   namespace: microservicios
 spec:
   selector:
-    app: pet-postgres
+    app: notification-postgres
   ports:
     - port: 5432
       targetPort: 5432
