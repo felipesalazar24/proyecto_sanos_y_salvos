@@ -89,8 +89,7 @@ export default function PetsPage() {
         const name = report.name?.toLowerCase() || '';
         const location = (report.lastSeenLocation || report.last_seen_location || '').toLowerCase();
         const description = report.description?.toLowerCase() || '';
-        const type = String(report.typeId || report.type_id || '').toLowerCase();
-        return name.includes(query) || location.includes(query) || description.includes(query) || type.includes(query);
+        return name.includes(query) || location.includes(query) || description.includes(query);
       });
     }
 
@@ -242,9 +241,6 @@ export default function PetsPage() {
                         </span>
                       </div>
                       <CardTitle className="text-xl capitalize">{report.name}</CardTitle>
-                      <CardDescription className="text-sm font-semibold text-primary capitalize">
-                        {String(report.typeId || report.type_id || '').replace('-', ' - ')}
-                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 flex-1">
                       <p className="text-sm text-muted-foreground line-clamp-3">
