@@ -11,18 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User,
   PawPrint,
-  Bell,
   Settings,
   LogOut,
   MapPin,
   Calendar,
-  Edit,
   Eye
 } from "lucide-react";
 import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
 interface UserData {
+  id: number;
   name: string;
   lastName: string;
   email: string;
@@ -102,8 +101,11 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
-  const userReports = mockReports.slice(0, 2);
-  const activeReports = userReports.filter(r => r.status === 'activo');
+  const userReports = user 
+    ? (mockReports as any[]).filter(report => String(report.userId || report.user_id || '') === String(user.id)) 
+    : [];
+    
+  const activeReports = userReports.filter(r => String(r.status).toLowerCase() === 'activo' || String(r.status).toLowerCase() === 'extraviado');
 
   if (loading) {
     return (
@@ -138,14 +140,14 @@ export default function ProfilePage() {
                   </h1>
                   <p className="text-muted-foreground">{user.email}</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Edit className="h-4 w-4" />
-                    Editar Perfil
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Configuración
+                <div>
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Cerrar Sesión
                   </Button>
                 </div>
               </div>
@@ -173,25 +175,21 @@ export default function ProfilePage() {
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold">3</div>
+                <div className="text-3xl font-bold">0</div>
                 <div className="text-sm text-muted-foreground">Alertas</div>
               </CardContent>
             </Card>
           </div>
 
           <Tabs defaultValue="reports">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="reports" className="gap-2">
                 <PawPrint className="h-4 w-4" />
                 Mis Reportes
               </TabsTrigger>
-              <TabsTrigger value="alerts" className="gap-2">
-                <Bell className="h-4 w-4" />
-                Alertas
-              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
                 <Settings className="h-4 w-4" />
-                Ajustes
+                Ver mi Información
               </TabsTrigger>
             </TabsList>
 
@@ -217,7 +215,7 @@ export default function ProfilePage() {
                         {report.imageUrl && (
                           <img
                             src={report.imageUrl}
-                            alt={report.petName || 'Mascota'}
+                            alt={report.petName || report.name || 'Mascota'}
                             className="h-20 w-20 rounded-lg object-cover"
                             crossOrigin="anonymous"
                           />
@@ -227,23 +225,23 @@ export default function ProfilePage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold">
-                                  {report.petName || report.petType}
+                                  {report.petName || report.name || report.petType || 'Mascota'}
                                 </h3>
-                                <Badge variant={report.type === 'perdido' ? 'destructive' : 'default'}>
-                                  {report.type === 'perdido' ? 'Perdido' : 'Encontrado'}
+                                <Badge variant={String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'destructive' : 'default'}>
+                                  {String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'Extraviado' : 'Encontrado'}
                                 </Badge>
-                                <Badge variant={report.status === 'activo' ? 'outline' : 'secondary'}>
+                                <Badge variant="outline">
                                   {report.status}
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {report.location.city}
+                                  {report.location?.city || report.lastSeenLocation || report.last_seen_location || 'N/A'}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {new Date(report.createdAt).toLocaleDateString('es-CL')}
+                                  {report.createdAt || report.lastSeenDate || report.last_seen_date ? new Date(report.createdAt || report.lastSeenDate || report.last_seen_date).toLocaleDateString('es-CL') : 'N/A'}
                                 </span>
                               </div>
                             </div>
@@ -254,10 +252,6 @@ export default function ProfilePage() {
                                   Ver
                                 </Button>
                               </Link>
-                              <Button variant="outline" size="sm" className="gap-1">
-                                <Edit className="h-3 w-3" />
-                                Editar
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -275,46 +269,12 @@ export default function ProfilePage() {
               </Link>
             </TabsContent>
 
-            <TabsContent value="alerts" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configuración de Alertas</CardTitle>
-                  <CardDescription>
-                    Administra cómo y cuándo recibir notificaciones de posibles coincidencias.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">Alertas por Email</p>
-                      <p className="text-sm text-muted-foreground">Recibe notificaciones en tu correo</p>
-                    </div>
-                    <Badge variant="secondary">Activo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">Alertas en la App</p>
-                      <p className="text-sm text-muted-foreground">Notificaciones push en la plataforma</p>
-                    </div>
-                    <Badge variant="secondary">Activo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <p className="font-medium">Resumen Semanal</p>
-                      <p className="text-sm text-muted-foreground">Recibe un resumen de actividad cada semana</p>
-                    </div>
-                    <Badge variant="outline">Inactivo</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="settings" className="mt-6 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
                   <CardDescription>
-                    Aquí se muestra tu información de contacto.
+                    Aquí se muestra tu información de contacto almacenada en el sistema.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -346,36 +306,6 @@ export default function ProfilePage() {
                       <p className="font-medium capitalize">{user.city || 'N/A'}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Seguridad</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Cambiar Contraseña
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-destructive/50">
-                <CardHeader>
-                  <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button
-                    variant="outline"
-                    className="gap-2 w-full sm:w-auto"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar Sesión
-                  </Button>
-                  <Button variant="destructive" className="ml-2">
-                    Eliminar Cuenta
-                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
