@@ -87,7 +87,7 @@ export default function LoginPage() {
       </form>
       <p className="mt-6 text-center">
         ¿No tienes cuenta?{' '}
-        <a href="/auth/register" className="text-[#bc8a5f] underline">
+        <a href="/register" className="text-[#bc8a5f] underline">
           Crear cuenta
         </a>
       </p>

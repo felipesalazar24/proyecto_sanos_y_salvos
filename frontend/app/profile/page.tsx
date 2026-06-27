@@ -11,26 +11,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User,
   PawPrint,
-  Bell,
   Settings,
   LogOut,
   MapPin,
   Calendar,
-  Edit,
   Eye
 } from "lucide-react";
-import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
 interface UserData {
+  id: number;
   name: string;
+  lastName: string;
   email: string;
-  phoneNumber?: string;
-  address?: string;
-  addressNumber?: string;
-  city?: string;
-  country?: string;
-  createdAt?: string;
+  phoneNumber: number;
+  address: string;
+  addressNumber: number;
+  city: string;
+  country: string;
 }
 
 function parseJwt(token: string): Record<string, any> | null {
@@ -53,46 +51,83 @@ function parseJwt(token: string): Record<string, any> | null {
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
+  const [userReports, setUserReports] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/auth/login");
-      return;
-    }
+    const fetchProfileAndReports = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.push("/login");
+          return;
+        }
 
-    const payload = parseJwt(token);
-    const email = payload?.sub || payload?.email;
+        const payload = parseJwt(token);
+        const email = payload?.sub || payload?.email;
 
-    if (!email) {
-      setError("No se encontró el email en el token.");
-      setLoading(false);
-      return;
-    }
+        if (!email) {
+          throw new Error("No se pudo extraer el identificador de usuario del token.");
+        }
 
-    setUser({
-      name: payload?.name || "Usuario",
-      email: email,
-      phoneNumber: payload?.phoneNumber || "N/A",
-      address: payload?.address || "N/A",
-      addressNumber: payload?.addressNumber || "N/A",
-      city: payload?.city || "N/A",
-      country: payload?.country || "N/A",
-    });
+        const userResponse = await fetch(`http://localhost:8084/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    setLoading(false);
+        if (!userResponse.ok) {
+          throw new Error('No se pudo cargar el perfil real del usuario');
+        }
+
+        const userData: UserData = await userResponse.json();
+        setUser(userData);
+
+        try {
+          const petsResponse = await fetch(`http://localhost:8084/api/v1/bff/web/pets`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (petsResponse.ok) {
+            const allPets = await petsResponse.json();
+            if (Array.isArray(allPets)) {
+              const filtered = allPets.filter(pet => 
+                String(pet.userId || pet.user_id || '') === String(userData.id)
+              );
+              setUserReports(filtered);
+            }
+          }
+        } catch (petErr) {
+          console.error("Error cargando las mascotas desde el BFF:", petErr);
+        }
+
+      } catch (err: any) {
+        setError(err.message || 'Error loading profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileAndReports();
   }, [router]);
 
   const handleLogout = (): void => {
     localStorage.removeItem('token');
     localStorage.removeItem('email');
-    router.push('/auth/login');
+    router.push('/login');
   };
 
-  const userReports = mockReports.slice(0, 2);
-  const activeReports = userReports.filter(r => r.status === 'activo');
+  const activeReports = userReports.filter(r => 
+    String(r.status).toLowerCase() === 'activo' || 
+    String(r.status).toLowerCase() === 'extraviado'
+  );
 
   if (loading) {
     return (
@@ -122,17 +157,19 @@ export default function ProfilePage() {
                   <User className="h-10 w-10 text-primary" />
                 </div>
                 <div className="text-center sm:text-left flex-1">
-                  <h1 className="text-2xl font-bold">{user?.name}</h1>
-                  <p className="text-muted-foreground">{user?.email}</p>
+                  <h1 className="text-2xl font-bold capitalize">
+                    {user.name} {user.lastName}
+                  </h1>
+                  <p className="text-muted-foreground">{user.email}</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Edit className="h-4 w-4" />
-                    Editar Perfil
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Configuración
+                <div>
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Cerrar Sesión
                   </Button>
                 </div>
               </div>
@@ -154,31 +191,27 @@ export default function ProfilePage() {
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold">1</div>
+                <div className="text-3xl font-bold">0</div>
                 <div className="text-sm text-muted-foreground">Reencuentros</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold">3</div>
+                <div className="text-3xl font-bold">0</div>
                 <div className="text-sm text-muted-foreground">Alertas</div>
               </CardContent>
             </Card>
           </div>
 
           <Tabs defaultValue="reports">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="reports" className="gap-2">
                 <PawPrint className="h-4 w-4" />
                 Mis Reportes
               </TabsTrigger>
-              <TabsTrigger value="alerts" className="gap-2">
-                <Bell className="h-4 w-4" />
-                Alertas
-              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
                 <Settings className="h-4 w-4" />
-                Ajustes
+                Ver mi Información
               </TabsTrigger>
             </TabsList>
 
@@ -204,7 +237,7 @@ export default function ProfilePage() {
                         {report.imageUrl && (
                           <img
                             src={report.imageUrl}
-                            alt={report.petName || 'Mascota'}
+                            alt={report.petName || report.name || 'Mascota'}
                             className="h-20 w-20 rounded-lg object-cover"
                             crossOrigin="anonymous"
                           />
@@ -214,23 +247,23 @@ export default function ProfilePage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold">
-                                  {report.petName || report.petType}
+                                  {report.petName || report.name || report.petType || 'Mascota'}
                                 </h3>
-                                <Badge variant={report.type === 'perdido' ? 'destructive' : 'default'}>
-                                  {report.type === 'perdido' ? 'Perdido' : 'Encontrado'}
+                                <Badge variant={String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'destructive' : 'default'}>
+                                  {String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'Extraviado' : 'Encontrado'}
                                 </Badge>
-                                <Badge variant={report.status === 'activo' ? 'outline' : 'secondary'}>
+                                <Badge variant="outline">
                                   {report.status}
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {report.location.city}
+                                  {report.location?.city || report.lastSeenLocation || report.last_seen_location || 'N/A'}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {new Date(report.createdAt).toLocaleDateString('es-CL')}
+                                  {report.createdAt || report.lastSeenDate || report.last_seen_date ? new Date(report.createdAt || report.lastSeenDate || report.last_seen_date).toLocaleDateString('es-CL') : 'N/A'}
                                 </span>
                               </div>
                             </div>
@@ -241,10 +274,6 @@ export default function ProfilePage() {
                                   Ver
                                 </Button>
                               </Link>
-                              <Button variant="outline" size="sm" className="gap-1">
-                                <Edit className="h-3 w-3" />
-                                Editar
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -262,106 +291,43 @@ export default function ProfilePage() {
               </Link>
             </TabsContent>
 
-            <TabsContent value="alerts" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Configuración de Alertas</CardTitle>
-                  <CardDescription>
-                    Administra cómo y cuándo recibir notificaciones de posibles coincidencias.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">Alertas por Email</p>
-                      <p className="text-sm text-muted-foreground">Recibe notificaciones en tu correo</p>
-                    </div>
-                    <Badge variant="secondary">Activo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">Alertas en la App</p>
-                      <p className="text-sm text-muted-foreground">Notificaciones push en la plataforma</p>
-                    </div>
-                    <Badge variant="secondary">Activo</Badge>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <p className="font-medium">Resumen Semanal</p>
-                      <p className="text-sm text-muted-foreground">Recibe un resumen de actividad cada semana</p>
-                    </div>
-                    <Badge variant="outline">Inactivo</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="settings" className="mt-6 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
                   <CardDescription>
-                    Aquí se muestra tu información de contacto.
+                    Aquí se muestra tu información de contacto almacenada en el sistema.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <p className="text-sm text-muted-foreground">Nombre Completo</p>
-                      <p className="font-medium">{user?.name}</p>
+                      <p className="font-medium capitalize">{user.name} {user.lastName}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{user?.email}</p>
+                      <p className="font-medium">{user.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <p className="font-medium">{user?.phoneNumber}</p>
+                      <p className="font-medium">{user.phoneNumber || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">País</p>
-                      <p className="font-medium">{user?.country}</p>
+                      <p className="font-medium capitalize">{user.country || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Dirección</p>
-                      <p className="font-medium">{user?.address} {user?.addressNumber}</p>
+                      <p className="font-medium capitalize">
+                        {user.address} {user.addressNumber || ''}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Ciudad</p>
-                      <p className="font-medium">{user?.city}</p>
+                      <p className="font-medium capitalize">{user.city || 'N/A'}</p>
                     </div>
                   </div>
-                  <Button variant="outline">Editar Información</Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Seguridad</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Cambiar Contraseña
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-destructive/50">
-                <CardHeader>
-                  <CardTitle className="text-destructive">Zona de Peligro</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button
-                    variant="outline"
-                    className="gap-2 w-full sm:w-auto"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar Sesión
-                  </Button>
-                  <Button variant="destructive" className="ml-2">
-                    Eliminar Cuenta
-                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

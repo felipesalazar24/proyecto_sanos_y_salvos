@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,13 +15,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Send, Info } from 'lucide-react';
-
-const ANIMAL_TYPES: Record<string, string[]> = {
-  perro: ['Husky', 'Doberman', 'Pastor Alemán', 'Labrador', 'Cocker Spaniel', 'Bulldog', 'Caniche', 'Beagle', 'Chihuahua', 'Otro'],
-  gato: ['Naranjo', 'Calico', 'Egipcio', 'Siamés', 'Persa', 'Bengalí', 'Ragdoll', 'Otro'],
-  ave: ['Loro', 'Canario', 'Paloma', 'Gallina', 'Ganso', 'Otro'],
-  otro: ['Conejo', 'Hamster', 'Tortuga', 'Otro']
-};
 
 const COLORS = [
   'Negro',
@@ -44,18 +37,73 @@ interface ReportFormProps {
   userId: string;
 }
 
+interface PetType {
+  id: number;
+  nameType: string;
+  breed: string; 
+}
+
+function parseJwt(token: string): Record<string, any> | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function ReportForm({ 
   userCountry = 'Chile',
   userCity = '',
   userId
 }: ReportFormProps) {
+  const [petTypes, setPetTypes] = useState<PetType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState<string>('');
+  const [loadingTypes, setLoadingTypes] = useState<boolean>(true);
   const [status, setStatus] = useState<'extraviado' | 'encontrado'>('extraviado');
-  const [animalType, setAnimalType] = useState<string>('perro');
-  const [breed, setBreed] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [petName, setPetName] = useState<string>('');
+  const [selectedAge, setSelectedAge] = useState<string>('joven');
+  const [selectedColor, setSelectedColor] = useState<string>('Negro');
+
+  useEffect(() => {
+    const loadPetTypes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api-bff/pet-types', { 
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setPetTypes(data);
+            if (data.length > 0) setSelectedTypeId(data[0].id.toString());
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadPetTypes();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -63,26 +111,59 @@ export function ReportForm({
     setSuccess('');
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
-    const commune = formData.get('lastSeenLocation') as string;
-    const fullLocation = `${userCountry}, ${userCity}, ${commune}`;
-
-    const reportPayload = {
-      name: petName || 'Desconocido',
-      age_category: (formData.get('ageCategory') as string) || 'adulto',
-      type_id: `${animalType}-${breed || 'Otro'}`,
-      user_id: userId,
-      last_seen_location: fullLocation,
-      last_seen_date: formData.get('lastSeenDate') as string,
-      color: formData.get('color') as string,
-      description: formData.get('description') as string,
-      status: status,
-    };
+    const formElement = e.currentTarget;
+    const formData = new FormData(formElement);
+    const approximateAddress = formData.get('lastSeenLocation') as string;
+    
+    // Filtra y une solo los componentes que tengan contenido real válido
+    const locationParts = [userCountry, userCity, approximateAddress].filter(
+      part => part && part.trim() !== '' && part !== 'Tu ciudad'
+    );
+    const fullLocation = locationParts.join(', ');
 
     try {
       const token = localStorage.getItem('token');
+      let finalUserId: number = Number(userId);
 
-      const response = await fetch('http://localhost:8084/api/v1/bff/web/pets', {
+      if (!finalUserId || isNaN(finalUserId) || finalUserId === 1) {
+        if (token) {
+          const payload = parseJwt(token);
+          const email = payload?.sub || payload?.email;
+          if (email) {
+            const userResponse = await fetch(`/api-bff/users/profile?email=${encodeURIComponent(email)}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData && userData.id) {
+                finalUserId = Number(userData.id);
+              }
+            }
+          }
+        }
+      }
+
+      if (!finalUserId || isNaN(finalUserId)) {
+        finalUserId = 1;
+      }
+
+      const reportPayload = {
+        name: petName || 'Desconocido',
+        ageCategory: selectedAge,       
+        typeId: Number(selectedTypeId), 
+        userId: finalUserId,         
+        lastSeenLocation: fullLocation, 
+        lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
+        color: selectedColor,           
+        description: (formData.get('description') as string) || 'Sin descripción',
+        status: status,
+      };
+
+      const response = await fetch('/api-bff/pets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,10 +182,8 @@ export function ReportForm({
       }
 
       setSuccess('Report successfully submitted.');
-      e.currentTarget.reset();
+      formElement.reset();
       setPetName('');
-      setBreed('');
-      setAnimalType('perro');
     } catch (err: any) {
       setError(err.message || 'Error sending report');
     } finally {
@@ -112,7 +191,6 @@ export function ReportForm({
     }
   };
 
-  const availableBreeds = ANIMAL_TYPES[animalType] || [];
   const isFoundReport = status === 'encontrado';
 
   return (
@@ -176,30 +254,19 @@ export function ReportForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="animalType">Tipo de Animal</Label>
-              <Select value={animalType} onValueChange={setAnimalType}>
-                <SelectTrigger id="animalType">
-                  <SelectValue />
+              <Label htmlFor="petType">Tipo y Raza de Mascota</Label>
+              <Select 
+                value={selectedTypeId} 
+                onValueChange={setSelectedTypeId}
+                disabled={loadingTypes}
+              >
+                <SelectTrigger id="petType">
+                  <SelectValue placeholder={loadingTypes ? "Cargando categorías..." : "Selecciona tipo y raza"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="perro">Perro</SelectItem>
-                  <SelectItem value="gato">Gato</SelectItem>
-                  <SelectItem value="ave">Ave</SelectItem>
-                  <SelectItem value="otro">Otro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="breed">Raza</Label>
-              <Select value={breed} onValueChange={setBreed}>
-                <SelectTrigger id="breed">
-                  <SelectValue placeholder="Selecciona raza" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableBreeds.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
+                  {petTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.nameType} {type.breed ? ` - ${type.breed}` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -210,7 +277,7 @@ export function ReportForm({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="ageCategory">Categoría de Edad</Label>
-              <Select name="ageCategory" defaultValue="adulto">
+              <Select name="ageCategory" value={selectedAge} onValueChange={setSelectedAge}>
                 <SelectTrigger id="ageCategory">
                   <SelectValue />
                 </SelectTrigger>
@@ -226,7 +293,7 @@ export function ReportForm({
 
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
-              <Select name="color" required>
+              <Select name="color" value={selectedColor} onValueChange={setSelectedColor}>
                 <SelectTrigger id="color">
                   <SelectValue placeholder="Selecciona color" />
                 </SelectTrigger>
@@ -251,7 +318,7 @@ export function ReportForm({
               placeholder={
                 isFoundReport
                   ? "Describe el estado de la mascota al encontrarla:\n- ¿Tiene collar o identificación?\n- ¿Tiene heridas o signos de maltrato?\n- ¿Parece asustada o agresiva?\n- ¿Está desnutrida o enferma?\n- Otras características distintivas..."
-                  : "Describe características distintivas: collar, cicatrices, comportamiento, alergias, etc."
+                  : "Describe características distintivas: collar, cicatrices, comportamiento, allergies, etc."
               }
               rows={4}
               required
@@ -281,11 +348,11 @@ export function ReportForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lastSeenLocation">Comuna/Localidad</Label>
+            <Label htmlFor="lastSeenLocation">Dirección aproximada</Label>
             <Input
               id="lastSeenLocation"
               name="lastSeenLocation"
-              placeholder="Ej: La Florida, Ñuñoa, Las Condes..."
+              placeholder="Ej: Av. Vicuña Mackenna 1234, block 3 o cerca de plaza central..."
               required
             />
           </div>
