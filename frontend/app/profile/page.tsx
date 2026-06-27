@@ -73,12 +73,12 @@ export default function ProfilePage() {
     }
 
     setUser({
-      name: payload?.name || "Usuario",
+      name: payload?.name || payload?.fullName || "Usuario",
       email: email,
-      phoneNumber: payload?.phoneNumber || "N/A",
-      address: payload?.address || "N/A",
-      addressNumber: payload?.addressNumber || "N/A",
-      city: payload?.city || "N/A",
+      phoneNumber: payload?.phoneNumber || payload?.phone_number || payload?.phone || "N/A",
+      address: payload?.address || payload?.address_line || payload?.street || "N/A",
+      addressNumber: payload?.addressNumber || payload?.address_number || payload?.number || "",
+      city: payload?.city || payload?.location || "N/A",
       country: payload?.country || "N/A",
     });
 
@@ -324,14 +324,15 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Dirección</p>
-                      <p className="font-medium">{user?.address} {user?.addressNumber}</p>
+                      <p className="font-medium">
+                        {user?.address} {user?.addressNumber}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Ciudad</p>
                       <p className="font-medium">{user?.city}</p>
                     </div>
                   </div>
-                  <Button variant="outline">Editar Información</Button>
                 </CardContent>
               </Card>
 
