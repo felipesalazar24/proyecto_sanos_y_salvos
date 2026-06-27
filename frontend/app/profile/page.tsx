@@ -24,13 +24,13 @@ import Link from "next/link";
 
 interface UserData {
   name: string;
+  lastName: string;
   email: string;
-  phoneNumber?: string;
-  address?: string;
-  addressNumber?: string;
-  city?: string;
-  country?: string;
-  createdAt?: string;
+  phoneNumber: number;
+  address: string;
+  addressNumber: number;
+  city: string;
+  country: string;
 }
 
 function parseJwt(token: string): Record<string, any> | null {
@@ -57,72 +57,43 @@ export default function ProfilePage() {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    const payload = parseJwt(token);
-    if (!payload) {
-      setError("Error al decodificar el token de sesión.");
-      setLoading(false);
-      return;
-    }
-
-    const email = payload.sub || payload.email || payload.Email || payload.USER_EMAIL || "";
-
-    if (!email) {
-      setError("No se encontró el email en el token.");
-      setLoading(false);
-      return;
-    }
-
-    const findKey = (keys: string[], fallback: string = "N/A"): string => {
-      for (const key of keys) {
-        if (payload[key] !== undefined && payload[key] !== null) {
-          return String(payload[key]);
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.push("/login");
+          return;
         }
+
+        const payload = parseJwt(token);
+        const email = payload?.sub || payload?.email;
+
+        if (!email) {
+          throw new Error("No se pudo extraer el identificador de usuario del token.");
+        }
+
+        const response = await fetch(`/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el perfil real del usuario');
+        }
+
+        const data: UserData = await response.json();
+        setUser(data);
+      } catch (err: any) {
+        setError(err.message || 'Error loading profile data');
+      } finally {
+        setLoading(false);
       }
-      return fallback;
     };
 
-    const extractedName = findKey([
-      'name', 'fullName', 'fullname', 'nombre', 'nombreCompleto', 
-      'nombre_completo', 'username', 'userName', 'given_name', 'display_name'
-    ], "Usuario Activo");
-
-    const extractedPhone = findKey([
-      'phoneNumber', 'phone_number', 'phone', 'telefono', 'tel', 'cellphone'
-    ], "N/A");
-
-    const extractedAddress = findKey([
-      'address', 'address_line', 'addressLine', 'street', 'calle', 'direccion'
-    ], "N/A");
-
-    const extractedNumber = findKey([
-      'addressNumber', 'address_number', 'number', 'numero', 'num'
-    ], "");
-
-    const extractedCity = findKey([
-      'city', 'ciudad', 'location', 'localidad', 'commune', 'comuna'
-    ], "N/A");
-
-    const extractedCountry = findKey([
-      'country', 'pais', 'país'
-    ], "Chile");
-
-    setUser({
-      name: extractedName,
-      email: email,
-      phoneNumber: extractedPhone,
-      address: extractedAddress,
-      addressNumber: extractedNumber,
-      city: extractedCity,
-      country: extractedCountry,
-    });
-
-    setLoading(false);
+    fetchUserProfile();
   }, [router]);
 
   const handleLogout = (): void => {
@@ -162,8 +133,10 @@ export default function ProfilePage() {
                   <User className="h-10 w-10 text-primary" />
                 </div>
                 <div className="text-center sm:text-left flex-1">
-                  <h1 className="text-2xl font-bold">{user?.name}</h1>
-                  <p className="text-muted-foreground">{user?.email}</p>
+                  <h1 className="text-2xl font-bold capitalize">
+                    {user.name} {user.lastName}
+                  </h1>
+                  <p className="text-muted-foreground">{user.email}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
@@ -348,29 +321,29 @@ export default function ProfilePage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <p className="text-sm text-muted-foreground">Nombre Completo</p>
-                      <p className="font-medium">{user?.name}</p>
+                      <p className="font-medium capitalize">{user.name} {user.lastName}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{user?.email}</p>
+                      <p className="font-medium">{user.email}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <p className="font-medium">{user?.phoneNumber}</p>
+                      <p className="font-medium">{user.phoneNumber || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">País</p>
-                      <p className="font-medium">{user?.country}</p>
+                      <p className="font-medium capitalize">{user.country || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Dirección</p>
-                      <p className="font-medium">
-                        {user?.address} {user?.addressNumber}
+                      <p className="font-medium capitalize">
+                        {user.address} {user.addressNumber || ''}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Ciudad</p>
-                      <p className="font-medium">{user?.city}</p>
+                      <p className="font-medium capitalize">{user.city || 'N/A'}</p>
                     </div>
                   </div>
                 </CardContent>
