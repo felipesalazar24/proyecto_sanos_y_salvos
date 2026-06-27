@@ -64,7 +64,13 @@ export default function ProfilePage() {
     }
 
     const payload = parseJwt(token);
-    const email = payload?.sub || payload?.email;
+    if (!payload) {
+      setError("Error al decodificar el token de sesión.");
+      setLoading(false);
+      return;
+    }
+
+    const email = payload.sub || payload.email || payload.Email || payload.USER_EMAIL || "";
 
     if (!email) {
       setError("No se encontró el email en el token.");
@@ -72,14 +78,48 @@ export default function ProfilePage() {
       return;
     }
 
+    const findKey = (keys: string[], fallback: string = "N/A"): string => {
+      for (const key of keys) {
+        if (payload[key] !== undefined && payload[key] !== null) {
+          return String(payload[key]);
+        }
+      }
+      return fallback;
+    };
+
+    const extractedName = findKey([
+      'name', 'fullName', 'fullname', 'nombre', 'nombreCompleto', 
+      'nombre_completo', 'username', 'userName', 'given_name', 'display_name'
+    ], "Usuario Activo");
+
+    const extractedPhone = findKey([
+      'phoneNumber', 'phone_number', 'phone', 'telefono', 'tel', 'cellphone'
+    ], "N/A");
+
+    const extractedAddress = findKey([
+      'address', 'address_line', 'addressLine', 'street', 'calle', 'direccion'
+    ], "N/A");
+
+    const extractedNumber = findKey([
+      'addressNumber', 'address_number', 'number', 'numero', 'num'
+    ], "");
+
+    const extractedCity = findKey([
+      'city', 'ciudad', 'location', 'localidad', 'commune', 'comuna'
+    ], "N/A");
+
+    const extractedCountry = findKey([
+      'country', 'pais', 'país'
+    ], "Chile");
+
     setUser({
-      name: payload?.name || payload?.fullName || "Usuario",
+      name: extractedName,
       email: email,
-      phoneNumber: payload?.phoneNumber || payload?.phone_number || payload?.phone || "N/A",
-      address: payload?.address || payload?.address_line || payload?.street || "N/A",
-      addressNumber: payload?.addressNumber || payload?.address_number || payload?.number || "",
-      city: payload?.city || payload?.location || "N/A",
-      country: payload?.country || "N/A",
+      phoneNumber: extractedPhone,
+      address: extractedAddress,
+      addressNumber: extractedNumber,
+      city: extractedCity,
+      country: extractedCountry,
     });
 
     setLoading(false);
