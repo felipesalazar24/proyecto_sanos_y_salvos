@@ -17,7 +17,6 @@ import {
   Calendar,
   Eye
 } from "lucide-react";
-import { mockReports } from "@/lib/mock-data";
 import Link from "next/link";
 
 interface UserData {
@@ -52,11 +51,12 @@ function parseJwt(token: string): Record<string, any> | null {
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
+  const [userReports, setUserReports] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchProfileAndReports = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -71,7 +71,7 @@ export default function ProfilePage() {
           throw new Error("No se pudo extraer el identificador de usuario del token.");
         }
 
-        const response = await fetch(`http://localhost:8084/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
+        const userResponse = await fetch(`http://localhost:8084/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -79,12 +79,35 @@ export default function ProfilePage() {
           }
         });
 
-        if (!response.ok) {
+        if (!userResponse.ok) {
           throw new Error('No se pudo cargar el perfil real del usuario');
         }
 
-        const data: UserData = await response.json();
-        setUser(data);
+        const userData: UserData = await userResponse.json();
+        setUser(userData);
+
+        try {
+          const petsResponse = await fetch(`http://localhost:8084/api/v1/bff/web/pets`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (petsResponse.ok) {
+            const allPets = await petsResponse.json();
+            if (Array.isArray(allPets)) {
+              const filtered = allPets.filter(pet => 
+                String(pet.userId || pet.user_id || '') === String(userData.id)
+              );
+              setUserReports(filtered);
+            }
+          }
+        } catch (petErr) {
+          console.error("Error cargando las mascotas desde el BFF:", petErr);
+        }
+
       } catch (err: any) {
         setError(err.message || 'Error loading profile data');
       } finally {
@@ -92,7 +115,7 @@ export default function ProfilePage() {
       }
     };
 
-    fetchUserProfile();
+    fetchProfileAndReports();
   }, [router]);
 
   const handleLogout = (): void => {
@@ -101,11 +124,10 @@ export default function ProfilePage() {
     router.push('/login');
   };
 
-  const userReports = user 
-    ? (mockReports as any[]).filter(report => String(report.userId || report.user_id || '') === String(user.id)) 
-    : [];
-    
-  const activeReports = userReports.filter(r => String(r.status).toLowerCase() === 'activo' || String(r.status).toLowerCase() === 'extraviado');
+  const activeReports = userReports.filter(r => 
+    String(r.status).toLowerCase() === 'activo' || 
+    String(r.status).toLowerCase() === 'extraviado'
+  );
 
   if (loading) {
     return (
@@ -169,7 +191,7 @@ export default function ProfilePage() {
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold">1</div>
+                <div className="text-3xl font-bold">0</div>
                 <div className="text-sm text-muted-foreground">Reencuentros</div>
               </CardContent>
             </Card>
