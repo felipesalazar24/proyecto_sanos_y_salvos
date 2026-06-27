@@ -15,11 +15,16 @@ import { Search, MapPin, Calendar, FilterX } from 'lucide-react';
 interface PetReport {
   id: string;
   name: string;
-  age_category: string;
-  type_id: string;
-  user_id: string;
-  last_seen_location: string;
-  last_seen_date: string;
+  ageCategory?: string;
+  age_category?: string;
+  typeId?: number | string;
+  type_id?: string;
+  userId?: number;
+  user_id?: string;
+  lastSeenLocation?: string;
+  last_seen_location?: string;
+  lastSeenDate?: string;
+  last_seen_date?: string;
   color: string;
   description: string;
   status: 'extraviado' | 'encontrado';
@@ -80,12 +85,13 @@ export default function PetsPage() {
 
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
-      result = result.filter(report => 
-        report.name.toLowerCase().includes(query) ||
-        report.last_seen_location.toLowerCase().includes(query) ||
-        report.description.toLowerCase().includes(query) ||
-        report.type_id.toLowerCase().includes(query)
-      );
+      result = result.filter(report => {
+        const name = report.name?.toLowerCase() || '';
+        const location = (report.lastSeenLocation || report.last_seen_location || '').toLowerCase();
+        const description = report.description?.toLowerCase() || '';
+        const type = String(report.typeId || report.type_id || '').toLowerCase();
+        return name.includes(query) || location.includes(query) || description.includes(query) || type.includes(query);
+      });
     }
 
     if (selectedColor !== 'Todos') {
@@ -93,7 +99,10 @@ export default function PetsPage() {
     }
 
     if (selectedAge !== 'Todos') {
-      result = result.filter(report => report.age_category.toLowerCase() === selectedAge.toLowerCase());
+      result = result.filter(report => {
+        const age = (report.ageCategory || report.age_category || '').toLowerCase();
+        return age === selectedAge.toLowerCase();
+      });
     }
 
     if (selectedStatus !== 'Todos') {
@@ -109,6 +118,15 @@ export default function PetsPage() {
     setSelectedColor('Todos');
     setSelectedAge('Todos');
     setSelectedStatus('Todos');
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+      return dateStr.split('T')[0];
+    } catch {
+      return dateStr;
+    }
   };
 
   if (loading) {
@@ -220,12 +238,12 @@ export default function PetsPage() {
                           {report.status === 'extraviado' ? 'Extraviado' : 'Encontrado'}
                         </Badge>
                         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded capitalize">
-                          {report.age_category}
+                          {report.ageCategory || report.age_category || 'N/A'}
                         </span>
                       </div>
                       <CardTitle className="text-xl capitalize">{report.name}</CardTitle>
                       <CardDescription className="text-sm font-semibold text-primary capitalize">
-                        {(report.type_id || '').replace('-', ' - ')}
+                        {String(report.typeId || report.type_id || '').replace('-', ' - ')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 flex-1">
@@ -239,11 +257,11 @@ export default function PetsPage() {
                         </div>
                         <div className="flex items-start gap-2">
                           <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                          <span>{report.last_seen_location}</span>
+                          <span>{report.lastSeenLocation || report.last_seen_location || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          <span>{report.last_seen_date}</span>
+                          <span>{formatDate(report.lastSeenDate || report.last_seen_date)}</span>
                         </div>
                       </div>
                     </CardContent>
