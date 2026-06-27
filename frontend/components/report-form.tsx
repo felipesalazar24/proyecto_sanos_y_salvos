@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,11 +44,20 @@ interface ReportFormProps {
   userId: string;
 }
 
+interface PetType {
+  id: number;
+  nameType: string;
+  breed: string; 
+}
+
 export function ReportForm({ 
   userCountry = 'Chile',
   userCity = '',
   userId
 }: ReportFormProps) {
+  const [petTypes, setPetTypes] = useState<PetType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState<string>('');
+  const [loadingTypes, setLoadingTypes] = useState<boolean>(true);
   const [status, setStatus] = useState<'extraviado' | 'encontrado'>('extraviado');
   const [animalType, setAnimalType] = useState<string>('perro');
   const [breed, setBreed] = useState<string>('');
@@ -56,6 +65,37 @@ export function ReportForm({
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [petName, setPetName] = useState<string>('');
+  const [selectedAge, setSelectedAge] = useState<string>('joven');
+  const [selectedColor, setSelectedColor] = useState<string>('Negro');
+
+  useEffect(() => {
+    const loadPetTypes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api-bff/pet-types', { 
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setPetTypes(data);
+            if (data.length > 0) setSelectedTypeId(data[0].id.toString());
+          }
+        }
+      } catch (err) {
+        console.error("Error cargando tipos de mascotas:", err);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadPetTypes();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -69,20 +109,20 @@ export function ReportForm({
 
     const reportPayload = {
       name: petName || 'Desconocido',
-      age_category: (formData.get('ageCategory') as string) || 'adulto',
-      type_id: `${animalType}-${breed || 'Otro'}`,
-      user_id: userId,
-      last_seen_location: fullLocation,
-      last_seen_date: formData.get('lastSeenDate') as string,
-      color: formData.get('color') as string,
-      description: formData.get('description') as string,
+      ageCategory: selectedAge,       
+      typeId: Number(selectedTypeId), 
+      userId: 1,         
+      lastSeenLocation: fullLocation, 
+      lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
+      color: selectedColor,           
+      description: (formData.get('description') as string) || 'Sin descripción',
       status: status,
     };
 
     try {
       const token = localStorage.getItem('token');
 
-      const response = await fetch('http://localhost:8084/api/v1/bff/web/pets', {
+      const response = await fetch('/api-bff/pets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,30 +216,19 @@ export function ReportForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="animalType">Tipo de Animal</Label>
-              <Select value={animalType} onValueChange={setAnimalType}>
-                <SelectTrigger id="animalType">
-                  <SelectValue />
+              <Label htmlFor="petType">Tipo y Raza de Mascota</Label>
+              <Select 
+                value={selectedTypeId} 
+                onValueChange={setSelectedTypeId}
+                disabled={loadingTypes}
+              >
+                <SelectTrigger id="petType">
+                  <SelectValue placeholder={loadingTypes ? "Cargando categorías..." : "Selecciona tipo y raza"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="perro">Perro</SelectItem>
-                  <SelectItem value="gato">Gato</SelectItem>
-                  <SelectItem value="ave">Ave</SelectItem>
-                  <SelectItem value="otro">Otro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="breed">Raza</Label>
-              <Select value={breed} onValueChange={setBreed}>
-                <SelectTrigger id="breed">
-                  <SelectValue placeholder="Selecciona raza" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableBreeds.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
+                  {petTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.nameType} {type.breed ? ` - ${type.breed}` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>

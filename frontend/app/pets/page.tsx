@@ -50,7 +50,7 @@ export default function PetsPage() {
           return;
         }
 
-        const response = await fetch('http://localhost:8084/api/v1/bff/web/pets', {
+        const response = await fetch('/api-bff/pets', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -225,7 +225,7 @@ export default function PetsPage() {
                       </div>
                       <CardTitle className="text-xl capitalize">{report.name}</CardTitle>
                       <CardDescription className="text-sm font-semibold text-primary capitalize">
-                        {report.type_id.replace('-', ' - ')}
+                        {(report.type_id || '').replace('-', ' - ')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 flex-1">
