@@ -16,13 +16,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MapPin, Send, Info } from 'lucide-react';
 
-const ANIMAL_TYPES: Record<string, string[]> = {
-  perro: ['Husky', 'Doberman', 'Pastor Alemán', 'Labrador', 'Cocker Spaniel', 'Bulldog', 'Caniche', 'Beagle', 'Chihuahua', 'Otro'],
-  gato: ['Naranjo', 'Calico', 'Egipcio', 'Siamés', 'Persa', 'Bengalí', 'Ragdoll', 'Otro'],
-  ave: ['Loro', 'Canario', 'Paloma', 'Gallina', 'Ganso', 'Otro'],
-  otro: ['Conejo', 'Hamster', 'Tortuga', 'Otro']
-};
-
 const COLORS = [
   'Negro',
   'Blanco',
@@ -59,8 +52,6 @@ export function ReportForm({
   const [selectedTypeId, setSelectedTypeId] = useState<string>('');
   const [loadingTypes, setLoadingTypes] = useState<boolean>(true);
   const [status, setStatus] = useState<'extraviado' | 'encontrado'>('extraviado');
-  const [animalType, setAnimalType] = useState<string>('perro');
-  const [breed, setBreed] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -88,7 +79,7 @@ export function ReportForm({
           }
         }
       } catch (err) {
-        console.error("Error cargando tipos de mascotas:", err);
+        console.error(err);
       } finally {
         setLoadingTypes(false);
       }
@@ -103,7 +94,8 @@ export function ReportForm({
     setSuccess('');
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const formData = new FormData(formElement);
     const commune = formData.get('lastSeenLocation') as string;
     const fullLocation = `${userCountry}, ${userCity}, ${commune}`;
 
@@ -111,7 +103,7 @@ export function ReportForm({
       name: petName || 'Desconocido',
       ageCategory: selectedAge,       
       typeId: Number(selectedTypeId), 
-      userId: 1,         
+      userId: Number(userId) || 1,         
       lastSeenLocation: fullLocation, 
       lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
       color: selectedColor,           
@@ -141,10 +133,8 @@ export function ReportForm({
       }
 
       setSuccess('Report successfully submitted.');
-      e.currentTarget.reset();
+      formElement.reset();
       setPetName('');
-      setBreed('');
-      setAnimalType('perro');
     } catch (err: any) {
       setError(err.message || 'Error sending report');
     } finally {
@@ -152,7 +142,6 @@ export function ReportForm({
     }
   };
 
-  const availableBreeds = ANIMAL_TYPES[animalType] || [];
   const isFoundReport = status === 'encontrado';
 
   return (
@@ -239,7 +228,7 @@ export function ReportForm({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="ageCategory">Categoría de Edad</Label>
-              <Select name="ageCategory" defaultValue="adulto">
+              <Select name="ageCategory" value={selectedAge} onValueChange={setSelectedAge}>
                 <SelectTrigger id="ageCategory">
                   <SelectValue />
                 </SelectTrigger>
@@ -255,7 +244,7 @@ export function ReportForm({
 
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
-              <Select name="color" required>
+              <Select name="color" value={selectedColor} onValueChange={setSelectedColor}>
                 <SelectTrigger id="color">
                   <SelectValue placeholder="Selecciona color" />
                 </SelectTrigger>
@@ -280,7 +269,7 @@ export function ReportForm({
               placeholder={
                 isFoundReport
                   ? "Describe el estado de la mascota al encontrarla:\n- ¿Tiene collar o identificación?\n- ¿Tiene heridas o signos de maltrato?\n- ¿Parece asustada o agresiva?\n- ¿Está desnutrida o enferma?\n- Otras características distintivas..."
-                  : "Describe características distintivas: collar, cicatrices, comportamiento, alergias, etc."
+                  : "Describe características distintivas: collar, cicatrices, comportamiento, allergies, etc."
               }
               rows={4}
               required
