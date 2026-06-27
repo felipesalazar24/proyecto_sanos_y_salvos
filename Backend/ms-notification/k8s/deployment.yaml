@@ -1,41 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ms-user
+  name: ms-notification
   namespace: microservicios
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ms-user
+      app: ms-notification
   template:
     metadata:
       labels:
-        app: ms-user
+        app: ms-notification
     spec:
       containers:
-        - name: ms-user
-          image: ms-user:1.0
+        - name: ms-notification
+          image: ms-notification:1.0
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8081
+            - containerPort: 8085
           env:
             - name: SERVER_PORT
-              value: "8081"
-            # Configuración de conexión para Spring Boot
+              value: "8085"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://user-postgres:5432/db_usuarios"
+              value: "jdbc:postgresql://notification-postgres:5432/db_notificaciones"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: user-secrets
+                  name: notification-secrets
                   key: DB_USER
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: user-secrets
+                  name: notification-secrets
                   key: DB_PASSWORD
-            # Propiedades adicionales de tu docker-compose
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: "validate"
             - name: SPRING_FLYWAY_ENABLED
@@ -46,12 +44,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-user
+  name: ms-notification
   namespace: microservicios
 spec:
   selector:
-    app: ms-user
+    app: ms-notification
   ports:
-    - port: 8081
-      targetPort: 8081
+    - port: 8085
+      targetPort: 8085
   type: ClusterIP

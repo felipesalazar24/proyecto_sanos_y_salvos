@@ -3,7 +3,9 @@ package cl.sanos_y_salvos.ms_base.api.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.NotificationDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.NotificationDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetTypeDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
@@ -11,6 +13,7 @@ import cl.sanos_y_salvos.ms_base.api.dto.UserDTO;
 import cl.sanos_y_salvos.ms_base.api.service.AuthService;
 import cl.sanos_y_salvos.ms_base.api.service.PetService;
 import cl.sanos_y_salvos.ms_base.api.service.UserService;
+import cl.sanos_y_salvos.ms_base.api.service.NotificationService;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -24,11 +27,13 @@ public class BffController {
     private final AuthService authService;
     private final UserService userService;
     private final PetService petService;
+    private final NotificationService notificationService; // 🚀 Inyección del servicio de notificaciones
 
-    public BffController(AuthService authService, UserService userService, PetService petService) {
+    public BffController(AuthService authService, UserService userService, PetService petService, NotificationService notificationService) {
         this.authService = authService;
         this.userService = userService;
         this.petService = petService;
+        this.notificationService = notificationService;
     }
 
     // --- AUTH ---
@@ -113,12 +118,11 @@ public class BffController {
         return ResponseEntity.ok(petService.saveType(type));
     }
 
+       // --- NOTIFICATIONS ---
+       
     @PostMapping("/notifications")
-    public ResponseEntity<Map<String, String>> sendManualNotification(@RequestBody Map<String, Object> payload) {
-        System.out.println("[MS-NOTIFICATION MOCK] -> Notificación manual procesada con éxito. Payload: " + payload);
-        return ResponseEntity.ok(Map.of(
-            "status", "SENT",
-            "message", "Alerta distribuida correctamente a los usuarios del sector."
-        ));
+    public ResponseEntity<NotificationDTO> sendManualNotification(@RequestBody NotificationDTO notificationDTO) {
+        NotificationDTO response = notificationService.dispatchNotification(notificationDTO);
+        return ResponseEntity.ok(response);
     }
 }
