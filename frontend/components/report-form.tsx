@@ -43,6 +43,23 @@ interface PetType {
   breed: string; 
 }
 
+function parseJwt(token: string): Record<string, any> | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function ReportForm({ 
   userCountry = 'Chile',
   userCity = '',
@@ -99,20 +116,47 @@ export function ReportForm({
     const commune = formData.get('lastSeenLocation') as string;
     const fullLocation = `${userCountry}, ${userCity}, ${commune}`;
 
-    const reportPayload = {
-      name: petName || 'Desconocido',
-      ageCategory: selectedAge,       
-      typeId: Number(selectedTypeId), 
-      userId: Number(userId) || 1,         
-      lastSeenLocation: fullLocation, 
-      lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
-      color: selectedColor,           
-      description: (formData.get('description') as string) || 'Sin descripción',
-      status: status,
-    };
-
     try {
       const token = localStorage.getItem('token');
+      let finalUserId: number = Number(userId);
+
+      if (!finalUserId || isNaN(finalUserId) || finalUserId === 1) {
+        if (token) {
+          const payload = parseJwt(token);
+          const email = payload?.sub || payload?.email;
+          if (email) {
+            const userResponse = await fetch(`/api-bff/users/profile?email=${encodeURIComponent(email)}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData && userData.id) {
+                finalUserId = Number(userData.id);
+              }
+            }
+          }
+        }
+      }
+
+      if (!finalUserId || isNaN(finalUserId)) {
+        finalUserId = 1;
+      }
+
+      const reportPayload = {
+        name: petName || 'Desconocido',
+        ageCategory: selectedAge,       
+        typeId: Number(selectedTypeId), 
+        userId: finalUserId,         
+        lastSeenLocation: fullLocation, 
+        lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
+        color: selectedColor,           
+        description: (formData.get('description') as string) || 'Sin descripción',
+        status: status,
+      };
 
       const response = await fetch('/api-bff/pets', {
         method: 'POST',
