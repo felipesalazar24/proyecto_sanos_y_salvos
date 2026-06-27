@@ -72,7 +72,7 @@ export default function ProfilePage() {
           throw new Error("No se pudo extraer el identificador de usuario del token.");
         }
 
-        const response = await fetch(`/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
+        const response = await fetch(`http://localhost:8084/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
