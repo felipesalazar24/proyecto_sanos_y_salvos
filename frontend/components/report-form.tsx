@@ -113,8 +113,13 @@ export function ReportForm({
 
     const formElement = e.currentTarget;
     const formData = new FormData(formElement);
-    const commune = formData.get('lastSeenLocation') as string;
-    const fullLocation = `${userCountry}, ${userCity}, ${commune}`;
+    const approximateAddress = formData.get('lastSeenLocation') as string;
+    
+    // Filtra y une solo los componentes que tengan contenido real válido
+    const locationParts = [userCountry, userCity, approximateAddress].filter(
+      part => part && part.trim() !== '' && part !== 'Tu ciudad'
+    );
+    const fullLocation = locationParts.join(', ');
 
     try {
       const token = localStorage.getItem('token');
@@ -343,11 +348,11 @@ export function ReportForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lastSeenLocation">Comuna/Localidad</Label>
+            <Label htmlFor="lastSeenLocation">Dirección aproximada</Label>
             <Input
               id="lastSeenLocation"
               name="lastSeenLocation"
-              placeholder="Ej: La Florida, Ñuñoa, Las Condes..."
+              placeholder="Ej: Av. Vicuña Mackenna 1234, block 3 o cerca de plaza central..."
               required
             />
           </div>
