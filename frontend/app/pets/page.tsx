@@ -46,7 +46,7 @@ export default function PetsPage() {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
-          router.push('/auth/login');
+          router.push('/login');
           return;
         }
 

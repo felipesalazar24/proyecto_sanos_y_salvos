@@ -59,7 +59,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/auth/login");
+      router.push("/login");
       return;
     }
 
@@ -88,7 +88,7 @@ export default function ProfilePage() {
   const handleLogout = (): void => {
     localStorage.removeItem('token');
     localStorage.removeItem('email');
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   const userReports = mockReports.slice(0, 2);

@@ -199,7 +199,7 @@ export default function RegisterPage() {
       }
 
       setSuccess('¡Usuario creado exitosamente!');
-      setTimeout(() => router.push('/auth/login'), 1200);
+      setTimeout(() => router.push('/login'), 1200);
     } catch (err: any) {
       setError(err.message || 'Error en la creación');
     }
@@ -379,7 +379,7 @@ export default function RegisterPage() {
       </form>
       <p style={{ marginTop: 20, textAlign: 'center' }}>
         ¿Ya tienes cuenta?{' '}
-        <a href="/auth/login" style={{ color: '#bc8a5f', textDecoration: 'underline' }}>Inicia sesión</a>
+        <a href="/login" style={{ color: '#bc8a5f', textDecoration: 'underline' }}>Inicia sesión</a>
       </p>
     </div>
   );
