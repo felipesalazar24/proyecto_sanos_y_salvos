@@ -1,8 +1,7 @@
-# PersistentVolumeClaim para datos de PostgreSQL del auth-service.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pets-postgres-pvc
+  name: pet-postgres-pvc
   namespace: microservicios
 spec:
   accessModes:
@@ -11,43 +10,46 @@ spec:
     requests:
       storage: 1Gi
 ---
-# Deployment de PostgreSQL para pets-service.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pets-postgres
+  name: pet-postgres
   namespace: microservicios
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pets-postgres
+      app: pet-postgres
   template:
     metadata:
       labels:
-        app: pets-postgres
+        app: pet-postgres
+  template:
+    metadata:
+      labels:
+        app: pet-postgres
     spec:
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: postgres:15-alpine
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
           env:
-            - name: POSTGRES_pets
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: pets-secrets
-                  key: DB_pets
+                  name: pet-secrets
+                  key: DB_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pets-secrets
+                  name: pet-secrets
                   key: DB_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: pets-secrets
+                  name: pet-secrets
                   key: DB_NAME
           volumeMounts:
             - name: data
@@ -55,17 +57,16 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: pets-postgres-pvc
+            claimName: pet-postgres-pvc
 ---
-# Service ClusterIP para que pets-service pueda conectarse a postgres internamente.
 apiVersion: v1
 kind: Service
 metadata:
-  name: pets-postgres
+  name: pet-postgres
   namespace: microservicios
 spec:
   selector:
-    app: pets-postgres
+    app: pet-postgres
   ports:
     - port: 5432
       targetPort: 5432
