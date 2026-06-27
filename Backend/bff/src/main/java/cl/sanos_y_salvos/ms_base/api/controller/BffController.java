@@ -118,16 +118,8 @@ public class BffController {
         return ResponseEntity.ok(petService.saveType(type));
     }
 
-    @PostMapping("/notifications")
-    public ResponseEntity<Map<String, String>> sendManualNotification(@RequestBody Map<String, Object> payload) {
-        System.out.println("[MS-NOTIFICATION MOCK] -> Notificación manual procesada con éxito. Payload: " + payload);
-        return ResponseEntity.ok(Map.of(
-            "status", "SENT",
-            "message", "Alerta distribuida correctamente a los usuarios del sector."
-        ));
-    }
-
-    // --- NOTIFICATIONS ---
+       // --- NOTIFICATIONS ---
+       
     @PostMapping("/notifications")
     public ResponseEntity<NotificationDTO> sendManualNotification(@RequestBody NotificationDTO notificationDTO) {
         NotificationDTO response = notificationService.dispatchNotification(notificationDTO);
