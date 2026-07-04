@@ -1,6 +1,7 @@
 package cl.sanos_y_salvos.ms_base.api.config;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,45 +18,46 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @SuppressWarnings("unused")
 public class SecurityConfig {
 
+    @Value("{app.security.cors.allowed-origins}")
+    private String allowedOrigins;
+
+
+    @Value("{app.security.jwk-set-uri}")
+    private String jwkSetUri;
+
     @Bean
     public JwtDecoder jwtDecoder() {
-        String jwkUri = System.getenv("JWK_URI");
-        
-        if (jwkUri == null || jwkUri.isEmpty()) {
-            jwkUri = "http://ms-auth:8083/.well-known/jwks.json";
-        }
-        
-        return NimbusJwtDecoder.withJwkSetUri(jwkUri).build();
+       
+        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.GET, "/api/health", "/actuator/health").permitAll()
-                    .requestMatchers("/api/v1/bff/web/register").permitAll()
-                    .requestMatchers("/api/v1/bff/web/login").permitAll()
+                    .requestMatchers("/api/v1/bff/web/auth/register").permitAll()
+                    .requestMatchers("/api/v1/bff/web/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/validate").authenticated()
                     .anyRequest().authenticated()
-
-    )
-            
+            )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())));
 
         return http.build();
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        configuration.setAllowedOrigins(List.of("*")); 
+        configuration.setAllowedOrigins(List.of(allowedOrigins)); 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true); 
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

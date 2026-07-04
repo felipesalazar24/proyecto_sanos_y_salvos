@@ -1,11 +1,9 @@
 package cl.sanos_y_salvos.ms_base.api.service;
 
 import org.springframework.stereotype.Service;
-
 import cl.sanos_y_salvos.ms_base.api.client.PetClient;
 import cl.sanos_y_salvos.ms_base.api.dto.PetDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.PetTypeDTO;
-
 import java.util.List;
 
 @Service
