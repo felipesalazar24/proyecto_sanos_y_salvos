@@ -5,6 +5,7 @@ import cl.sanos_y_salvos.ms_base.api.client.AuthClient;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO; 
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;    
 import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
 import cl.sanos_y_salvos.ms_base.api.dto.UserDTO; 
 
@@ -30,14 +31,18 @@ public class AuthService {
     }
 
     public AuthResponseDTO register(RegisterRequestDTO registerRequest) {
-
-        authClient.register(registerRequest);
+        RegisterRequest authCredentials = new RegisterRequest(
+            registerRequest.email(),
+            registerRequest.password()
+        );
+        
+        authClient.register(authCredentials);
 
         UserDTO userProfile = new UserDTO();
         userProfile.setName(registerRequest.name()); 
         userProfile.setLastName(registerRequest.lastName());
         userProfile.setEmail(registerRequest.email());
-        userProfile.setPassword(registerRequest.password());
+        userProfile.setPassword(registerRequest.password()); 
         userProfile.setPhoneNumber(registerRequest.phoneNumber());
         userProfile.setAddress(registerRequest.address());
         userProfile.setAddressNumber(registerRequest.addressNumber()); 
