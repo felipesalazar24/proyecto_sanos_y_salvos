@@ -1,41 +1,42 @@
 version: '3.8'
 
 services:
-  db-usuarios:
+  db-user:
     image: postgres:15-alpine
-    container_name: db_ms_usuarios
+    container_name: db_ms_user
     environment:
-      POSTGRES_DB: db_usuarios
+      POSTGRES_DB: db_user
       POSTGRES_USER: felipe_admin
       POSTGRES_PASSWORD: password123
     ports:
       - "5432:5432"
     volumes:
-      - ./data/usuarios_db:/var/lib/postgresql/data
+      - ./data/user_db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_usuarios"]
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_user"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - sanos-y-salvos-network
 
-  ms-usuarios:
+  ms-user:
     build:
-      context: ./Backend/ms-usuario
+      context: ./Backend/ms-user
       dockerfile: Dockerfile
-    container_name: ms_usuarios_app
+    container_name: ms_user_app
     depends_on:
-      db-usuarios:
+      db-user:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db-usuarios:5432/db_usuarios
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-user:5432/db_user
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8081
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SENTRY_DSN: http://8dc2b5a1e5b742ee979d0c89de2b8c29@glitchtip-web:8000/25479
     ports:
       - "8081:8081"
     networks:
@@ -50,6 +51,11 @@ services:
       POSTGRES_PASSWORD: password123
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - sanos-y-salvos-network
 
@@ -59,7 +65,7 @@ services:
       dockerfile: Dockerfile
     container_name: ms_auth_app
     depends_on:
-      - ms-usuarios
+      - ms-user
       - db-auth
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/db_auth
@@ -76,6 +82,7 @@ services:
       SECURITY_JWT_ISSUER: "http://ms-auth:8083"
       SECURITY_JWT_PRIVATE_KEY_PATH: "/run/keys/private_key.pem"
       SECURITY_JWT_PUBLIC_KEY_PATH: "/run/keys/public_key.pem"
+      SENTRY_DSN: http://8dc2b5a1e5b742ee979d0c89de2b8c29@glitchtip-web:8000/25479
     volumes:
       - ./private_key.pem:/run/keys/private_key.pem:ro
       - ./public_key.pem:/run/keys/public_key.pem:ro
@@ -84,39 +91,40 @@ services:
     networks:
       - sanos-y-salvos-network
 
-  db-mascotas:
+  db-pets:
     image: postgres:15-alpine
-    container_name: db_ms_mascotas
+    container_name: db_ms_pets
     environment:
-      POSTGRES_DB: db_mascotas
+      POSTGRES_DB: db_pets
       POSTGRES_USER: felipe_admin
       POSTGRES_PASSWORD: password123
     ports:
       - "5434:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_mascotas"]
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_pet"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - sanos-y-salvos-network
 
-  ms-mascotas:
+  ms-pets:
     build:
-      context: ./Backend/ms-mascota
+      context: ./Backend/ms-pet
       dockerfile: Dockerfile
-    container_name: ms_mascotas_app
+    container_name: ms_pets_app
     depends_on:
-      db-mascotas:
+      db-pets:
         condition: service_healthy 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db-mascotas:5432/db_mascotas
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-pets:5432/db_pets
       SPRING_DATASOURCE_USERNAME: felipe_admin
       SPRING_DATASOURCE_PASSWORD: password123
       SERVER_PORT: 8082
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SENTRY_DSN: http://8dc2b5a1e5b742ee979d0c89de2b8c29@glitchtip-web:8000/25479
     ports:
       - "8082:8082"
     networks:
@@ -154,29 +162,31 @@ services:
       SERVER_PORT: 8085
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SENTRY_DSN: http://8dc2b5a1e5b742ee979d0c89de2b8c29@glitchtip-web:8000/25479
     ports:
       - "8085:8085"
     networks:
       - sanos-y-salvos-network
 
-  ms-bff:
+  bff:
     build:
       context: ./Backend/bff
       dockerfile: Dockerfile
     container_name: bff_app
     depends_on:
       - ms-auth
-      - ms-usuarios
-      - ms-mascotas
+      - ms-user
+      - ms-pets
       - ms-notification
     environment:
       SERVER_PORT: 8084
       AUTH_URL: "http://ms-auth:8083"
-      USERS_URL: "http://ms-usuarios:8081"
-      PETS_URL: "http://ms-mascotas:8082"
+      USERS_URL: "http://ms-user:8081"
+      PETS_URL: "http://ms-pets:8082"
       NOTIFICATIONS_URL: "http://ms-notification:8085"
       JWK_URI: "http://ms-auth:8083/.well-known/jwks.json"
       ENDPOINTS_MS_AUTH: "http://ms-auth:8083"
+      SENTRY_DSN: http://8dc2b5a1e5b742ee979d0c89de2b8c29@glitchtip-web:8000/25479
     ports:
       - "8084:8084"
     networks:
@@ -197,7 +207,65 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+    networks:
+      - sanos-y-salvos-network
+
+  glitchtip-db:
+    image: postgres:16
+    container_name: glitchtip_db
+    restart: always
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: felipe_admin
+      POSTGRES_PASSWORD: password123
+    volumes:
+      - glitchtip-pg-data:/var/lib/postgresql/data
+    networks:
+      - sanos-y-salvos-network
+
+  glitchtip-redis:
+    image: redis:7-alpine
+    container_name: glitchtip_redis
+    restart: always
+    networks:
+      - sanos-y-salvos-network
+
+  glitchtip-web:
+    image: glitchtip/glitchtip:v4.1
+    container_name: glitchtip_web_app
+    restart: always
+    depends_on:
+      - glitchtip-db
+      - glitchtip-redis
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://felipe_admin:password123@glitchtip-db:5432/glitchtip
+      - REDIS_URL=redis://glitchtip-redis:6379/0
+      - PORT=8000
+      - SECRET_KEY=un_texto_largo_y_aleatorio_sanos_y_salvos
+      - GLITCHTIP_DOMAIN=http://localhost:8000
+      - ENABLE_VOLUMETRIC_LIMITS=False
+    networks:
+      - sanos-y-salvos-network
+
+  glitchtip-worker:
+    image: glitchtip/glitchtip:v4.1
+    container_name: glitchtip_worker
+    restart: always
+    depends_on:
+      - glitchtip-db
+      - glitchtip-redis
+    environment:
+      - DATABASE_URL=postgres://postgres:password_secreto_glitchtip@glitchtip-db:5432/glitchtip
+      - REDIS_URL=redis://glitchtip-redis:6379/0
+      - GLITCHTIP_DOMAIN=http://localhost:8000
+    networks:
+      - sanos-y-salvos-network
 
 networks:
   sanos-y-salvos-network:
     driver: bridge
+
+volumes:
+  glitchtip-pg-data:

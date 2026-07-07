@@ -1,6 +1,7 @@
 package cl.sanos_y_salvos.ms_base.api.client;
 
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
+import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
@@ -15,12 +16,13 @@ import org.springframework.http.MediaType;
 @Component
 public class AuthClient {
 
-    private final RestTemplate restTemplate;
+private final RestTemplate restTemplate;
     private final String baseUrl;
 
     public AuthClient(RestTemplate restTemplate, @Value("${endpoints.ms-auth}") String baseUrl) {
         this.restTemplate = restTemplate;
-        this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        String sanitizedUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        this.baseUrl = sanitizedUrl + "/api/v1/auth";
     }
 
     public AuthResponseDTO login(LoginRequestDTO loginRequest) {
@@ -32,11 +34,11 @@ public class AuthClient {
         return restTemplate.postForObject(baseUrl + "/api/v1/auth/login", entity, AuthResponseDTO.class);
     }
 
-    public AuthResponseDTO register(RegisterRequestDTO registerRequest) {
+    public AuthResponseDTO register(RegisterRequest registerRequest) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        HttpEntity<RegisterRequestDTO> entity = new HttpEntity<>(registerRequest, headers);
+    
+        HttpEntity<RegisterRequest> entity = new HttpEntity<>(registerRequest, headers);
 
         return restTemplate.postForObject(baseUrl + "/api/v1/auth/register", entity, AuthResponseDTO.class);
     }
