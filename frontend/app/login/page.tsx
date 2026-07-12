@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const LOGIN_URL = "http://localhost:8084/api/v1/bff/web/login";
+const LOGIN_URL = "/api-bff/auth/login";
 
 export default function LoginPage() {
   const router = useRouter();

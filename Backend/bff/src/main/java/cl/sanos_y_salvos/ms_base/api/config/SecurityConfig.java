@@ -18,11 +18,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @SuppressWarnings("unused")
 public class SecurityConfig {
 
-    @Value("{app.security.cors.allowed-origins}")
+    @Value("${app.security.cors.allowed-origins}")
     private String allowedOrigins;
 
-
-    @Value("{app.security.jwk-set-uri}")
+    @Value("${app.security.jwt.jwk-set-uri}")
     private String jwkSetUri;
 
     @Bean
@@ -42,6 +41,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/v1/bff/web/auth/register").permitAll()
                     .requestMatchers("/api/v1/bff/web/auth/login").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/validate").authenticated()
+                    .requestMatchers("/api/v1/bff/web/pets/**").permitAll()
                     .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())));

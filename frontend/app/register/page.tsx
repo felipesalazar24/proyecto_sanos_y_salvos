@@ -116,7 +116,7 @@ const COUNTRY_CITY = {
   ]
 };
 
-const REGISTRATION_URL = "http://localhost:8084/api/v1/bff/web/register";
+const REGISTER_URL = "/api-bff/auth/register";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -176,7 +176,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch(REGISTRATION_URL, {
+      const response = await fetch(REGISTER_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

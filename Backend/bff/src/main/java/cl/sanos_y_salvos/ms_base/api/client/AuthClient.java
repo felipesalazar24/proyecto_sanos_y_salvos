@@ -3,7 +3,6 @@ package cl.sanos_y_salvos.ms_base.api.client;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
-import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.ValidateResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,7 +15,7 @@ import org.springframework.http.MediaType;
 @Component
 public class AuthClient {
 
-private final RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
     private final String baseUrl;
 
     public AuthClient(RestTemplate restTemplate, @Value("${endpoints.ms-auth}") String baseUrl) {
@@ -31,7 +30,7 @@ private final RestTemplate restTemplate;
         
         HttpEntity<LoginRequestDTO> entity = new HttpEntity<>(loginRequest, headers);
 
-        return restTemplate.postForObject(baseUrl + "/api/v1/auth/login", entity, AuthResponseDTO.class);
+        return restTemplate.postForObject(baseUrl + "/login", entity, AuthResponseDTO.class);
     }
 
     public AuthResponseDTO register(RegisterRequest registerRequest) {
@@ -40,7 +39,7 @@ private final RestTemplate restTemplate;
     
         HttpEntity<RegisterRequest> entity = new HttpEntity<>(registerRequest, headers);
 
-        return restTemplate.postForObject(baseUrl + "/api/v1/auth/register", entity, AuthResponseDTO.class);
+        return restTemplate.postForObject(baseUrl + "/register", entity, AuthResponseDTO.class);
     }
 
     public ValidateResponse validateToken(String token) {
@@ -49,7 +48,7 @@ private final RestTemplate restTemplate;
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         return restTemplate.exchange(
-                baseUrl + "/api/v1/auth/validate",
+                baseUrl + "/validate",
                 HttpMethod.GET,
                 entity,
                 ValidateResponse.class

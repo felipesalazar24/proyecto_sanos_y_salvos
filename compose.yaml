@@ -101,7 +101,7 @@ services:
     ports:
       - "5434:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_pet"]
+      test: ["CMD-SHELL", "pg_isready -U felipe_admin -d db_pets"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -257,7 +257,7 @@ services:
       - glitchtip-db
       - glitchtip-redis
     environment:
-      - DATABASE_URL=postgres://postgres:password_secreto_glitchtip@glitchtip-db:5432/glitchtip
+      - DATABASE_URL=postgres://felipe_admin:password123@glitchtip-db:5432/glitchtip
       - REDIS_URL=redis://glitchtip-redis:6379/0
       - GLITCHTIP_DOMAIN=http://localhost:8000
     networks:
