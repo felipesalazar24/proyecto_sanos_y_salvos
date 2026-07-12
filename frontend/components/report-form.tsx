@@ -90,9 +90,10 @@ export function ReportForm({
 
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data)) {
-            setPetTypes(data);
-            if (data.length > 0) setSelectedTypeId(data[0].id.toString());
+          const typesArray = data.collection || []
+          if (Array.isArray(typesArray)) {
+            setPetTypes(typesArray);
+            if (typesArray.length > 0) setSelectedTypeId(typesArray[0].id.toString());
           }
         }
       } catch (err) {
