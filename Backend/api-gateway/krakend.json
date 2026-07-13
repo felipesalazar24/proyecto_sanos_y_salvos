@@ -77,6 +77,19 @@
           ]
         }
       ]
+    },
+    {
+      "endpoint": "/api/v1/bff/web/users/profile",
+      "method": "GET",
+      "querystring_params": ["email"],
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/bff/web/users/profile",
+          "host": ["http://bff:8084"],
+          "encoding": "json"
+        }
+      ]
     }
   ]
 }

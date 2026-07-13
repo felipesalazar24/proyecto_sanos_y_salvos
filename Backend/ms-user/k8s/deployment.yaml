@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: ms-user
-          image: ms-user:1.0
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-ms-user:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8081
           env:

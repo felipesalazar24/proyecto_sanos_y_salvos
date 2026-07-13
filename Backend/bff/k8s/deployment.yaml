@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: ms-bff
-          image: ms-bff:1.0  
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-bff:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8084
           env:
@@ -39,7 +39,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-bff
+  name: bff
   namespace: microservicios
 spec:
   selector:

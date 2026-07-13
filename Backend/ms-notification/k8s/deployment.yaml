@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: ms-notification
-          image: ms-notification:1.0
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-ms-notification:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8085
           env:
