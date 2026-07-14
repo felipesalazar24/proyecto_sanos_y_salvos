@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-user
+  namespace: microservicios
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-user
+  template:
+    metadata:
+      labels:
+        app: ms-user
+    spec:
+      containers:
+        - name: ms-user
+          image: proyecto_sanos_y_salvos-ms-user:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SERVER_PORT
+              value: "8081"
+            # Configuración de conexión para Spring Boot
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://user-postgres:5432/db_usuarios"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: DB_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-secrets
+                  key: DB_PASSWORD
+            # Propiedades adicionales de tu docker-compose
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "validate"
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+            - name: SPRING_FLYWAY_BASELINE_ON_MIGRATE
+              value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-user
+  namespace: microservicios
+spec:
+  selector:
+    app: ms-user
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP

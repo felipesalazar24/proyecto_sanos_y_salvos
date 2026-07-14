@@ -19,32 +19,11 @@ public class UserAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", length = 30, unique = false,nullable = false)
-    private String name;
-
-    @Column(name = "last_name", length = 30, unique = false, nullable = false)
-    private String lastName;
-
     @Column(name = "email", length = 255, unique = true, nullable = false)
     private String email;
     
     @Column(name = "password", length = 255, nullable = false)
     private String password;
-    
-    @Column(name = "phone_number", length = 20, unique = true, nullable = false)
-    private int phoneNumber;
-    
-    @Column(name = "address", length = 100, nullable = false)
-    private String address;
-    
-    @Column(name = "addressNumber", length = 20, unique = true, nullable = false)
-    private int addressNumber;
-
-    @Column(name = "city", length = 50, nullable = false)
-    private String city;
-    
-    @Column(name = "country", length = 50, nullable = false)
-    private String country;
     
     @Column(name = "role", length = 20, nullable = false, columnDefinition = "varchar(20) default 'user'")
     private String role;

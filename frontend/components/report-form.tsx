@@ -80,7 +80,7 @@ export function ReportForm({
     const loadPetTypes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('/api-bff/pet-types', { 
+        const response = await fetch('/api-bff/pets/pet-types', { 
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -90,9 +90,10 @@ export function ReportForm({
 
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data)) {
-            setPetTypes(data);
-            if (data.length > 0) setSelectedTypeId(data[0].id.toString());
+          const typesArray = data.collection || []
+          if (Array.isArray(typesArray)) {
+            setPetTypes(typesArray);
+            if (typesArray.length > 0) setSelectedTypeId(typesArray[0].id.toString());
           }
         }
       } catch (err) {
@@ -115,7 +116,6 @@ export function ReportForm({
     const formData = new FormData(formElement);
     const approximateAddress = formData.get('lastSeenLocation') as string;
     
-    // Filtra y une solo los componentes que tengan contenido real válido
     const locationParts = [userCountry, userCity, approximateAddress].filter(
       part => part && part.trim() !== '' && part !== 'Tu ciudad'
     );
@@ -153,23 +153,23 @@ export function ReportForm({
 
       const reportPayload = {
         name: petName || 'Desconocido',
-        ageCategory: selectedAge,       
+        ageCategory: selectedAge, 
         typeId: Number(selectedTypeId), 
-        userId: finalUserId,         
+        userId: finalUserId, 
         lastSeenLocation: fullLocation, 
         lastSeenDate: `${formData.get('lastSeenDate')}T12:00:00.000Z`,
-        color: selectedColor,           
+        color: selectedColor, 
         description: (formData.get('description') as string) || 'Sin descripción',
         status: status,
       };
 
-      const response = await fetch('/api-bff/pets', {
+      const response = await fetch('/api-bff/pets', { 
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(reportPayload),
+        body: JSON.stringify(reportPayload)
       });
 
       if (!response.ok) {

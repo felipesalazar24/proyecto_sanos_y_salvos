@@ -1,6 +1,5 @@
 package cl.sanos_y_salvos.ms_base.api.service;
 
-import cl.sanos_y_salvos.ms_base.api.controller.AuthController;
 import cl.sanos_y_salvos.ms_base.api.dto.LoginRequestDTO;
 import cl.sanos_y_salvos.ms_base.api.dto.RegisterRequest;
 import cl.sanos_y_salvos.ms_base.api.dto.AuthResponseDTO;
@@ -11,12 +10,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.annotation.Lazy;
 
 @Service
 public class AuthService {
 
-    private final AuthController authController;
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -24,15 +21,13 @@ public class AuthService {
     public AuthService(
         AuthRepository authRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService,@Lazy AuthController authController
+        JwtService jwtService
     ) {
         this.authRepository = authRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.authController = authController;
     }
     
-
     @Transactional
     public void register(RegisterRequest request) {
         if (authRepository.existsByEmailIgnoreCase(request.email())) {
@@ -40,15 +35,8 @@ public class AuthService {
         }
 
         UserAccount user = new UserAccount();
-        user.setName(request.name().trim());
-        user.setLastName(request.lastName().trim());
         user.setEmail(request.email().trim().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.password().trim()));
-        user.setPhoneNumber(request.phoneNumber());
-        user.setAddress(request.address().trim());
-        user.setAddressNumber(request.addressNumber());
-        user.setCity(request.city());
-        user.setCountry(request.country());
         user.setRole("user");
         user.setEnabled(true);
         user.setCreatedAt(Instant.now());

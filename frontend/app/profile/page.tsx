@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +21,7 @@ import {
   LogOut,
   MapPin,
   Calendar,
-  Eye
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -33,14 +39,14 @@ interface UserData {
 
 function parseJwt(token: string): Record<string, any> | null {
   try {
-    const base64Url = token.split('.')[1];
+    const base64Url = token.split(".")[1];
     if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch {
@@ -53,7 +59,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [userReports, setUserReports] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchProfileAndReports = async () => {
@@ -68,38 +74,48 @@ export default function ProfilePage() {
         const email = payload?.sub || payload?.email;
 
         if (!email) {
-          throw new Error("No se pudo extraer el identificador de usuario del token.");
+          throw new Error(
+            "No se pudo extraer el identificador de usuario del token.",
+          );
         }
 
-        const userResponse = await fetch(`http://localhost:8084/api/v1/bff/web/users/profile?email=${encodeURIComponent(email)}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const userResponse = await fetch(
+          `/api-bff/users/profile?email=${encodeURIComponent(email)}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
 
         if (!userResponse.ok) {
-          throw new Error('No se pudo cargar el perfil real del usuario');
+          throw new Error("No se pudo cargar el perfil real del usuario");
         }
 
         const userData: UserData = await userResponse.json();
         setUser(userData);
 
         try {
-          const petsResponse = await fetch(`http://localhost:8084/api/v1/bff/web/pets`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const petsResponse = await fetch(
+            `/api-bff/pets`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
 
           if (petsResponse.ok) {
             const allPets = await petsResponse.json();
             if (Array.isArray(allPets)) {
-              const filtered = allPets.filter(pet => 
-                String(pet.userId || pet.user_id || '') === String(userData.id)
+              const filtered = allPets.filter(
+                (pet) =>
+                  String(pet.userId || pet.user_id || "") ===
+                  String(userData.id),
               );
               setUserReports(filtered);
             }
@@ -107,9 +123,8 @@ export default function ProfilePage() {
         } catch (petErr) {
           console.error("Error cargando las mascotas desde el BFF:", petErr);
         }
-
       } catch (err: any) {
-        setError(err.message || 'Error loading profile data');
+        setError(err.message || "Error loading profile data");
       } finally {
         setLoading(false);
       }
@@ -119,19 +134,22 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleLogout = (): void => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('email');
-    router.push('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    router.push("/login");
   };
 
-  const activeReports = userReports.filter(r => 
-    String(r.status).toLowerCase() === 'activo' || 
-    String(r.status).toLowerCase() === 'extraviado'
+  const activeReports = userReports.filter(
+    (r) =>
+      String(r.status).toLowerCase() === "activo" ||
+      String(r.status).toLowerCase() === "extraviado",
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">Cargando perfil...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        Cargando perfil...
+      </div>
     );
   }
 
@@ -179,20 +197,28 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold text-primary">{userReports.length}</div>
-                <div className="text-sm text-muted-foreground">Mis Reportes</div>
+                <div className="text-3xl font-bold text-primary">
+                  {userReports.length}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Mis Reportes
+                </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold text-accent-foreground">{activeReports.length}</div>
+                <div className="text-3xl font-bold text-accent-foreground">
+                  {activeReports.length}
+                </div>
                 <div className="text-sm text-muted-foreground">Activos</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
                 <div className="text-3xl font-bold">0</div>
-                <div className="text-sm text-muted-foreground">Reencuentros</div>
+                <div className="text-sm text-muted-foreground">
+                  Reencuentros
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -222,7 +248,8 @@ export default function ProfilePage() {
                     <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-semibold mb-2">No tienes reportes</h3>
                     <p className="text-muted-foreground mb-4">
-                      Crea tu primer reporte para comenzar a buscar o ayudar a reunir mascotas.
+                      Crea tu primer reporte para comenzar a buscar o ayudar a
+                      reunir mascotas.
                     </p>
                     <Link href="/create-report">
                       <Button>Crear Reporte</Button>
@@ -237,7 +264,7 @@ export default function ProfilePage() {
                         {report.imageUrl && (
                           <img
                             src={report.imageUrl}
-                            alt={report.petName || report.name || 'Mascota'}
+                            alt={report.petName || report.name || "Mascota"}
                             className="h-20 w-20 rounded-lg object-cover"
                             crossOrigin="anonymous"
                           />
@@ -247,29 +274,59 @@ export default function ProfilePage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold">
-                                  {report.petName || report.name || report.petType || 'Mascota'}
+                                  {report.petName ||
+                                    report.name ||
+                                    report.petType ||
+                                    "Mascota"}
                                 </h3>
-                                <Badge variant={String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'destructive' : 'default'}>
-                                  {String(report.type).toLowerCase() === 'perdido' || String(report.status).toLowerCase() === 'extraviado' ? 'Extraviado' : 'Encontrado'}
+                                <Badge
+                                  variant={
+                                    String(report.type).toLowerCase() ===
+                                      "perdido" ||
+                                    String(report.status).toLowerCase() ===
+                                      "extraviado"
+                                      ? "destructive"
+                                      : "default"
+                                  }
+                                >
+                                  {String(report.type).toLowerCase() ===
+                                    "perdido" ||
+                                  String(report.status).toLowerCase() ===
+                                    "extraviado"
+                                    ? "Extraviado"
+                                    : "Encontrado"}
                                 </Badge>
-                                <Badge variant="outline">
-                                  {report.status}
-                                </Badge>
+                                <Badge variant="outline">{report.status}</Badge>
                               </div>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {report.location?.city || report.lastSeenLocation || report.last_seen_location || 'N/A'}
+                                  {report.location?.city ||
+                                    report.lastSeenLocation ||
+                                    report.last_seen_location ||
+                                    "N/A"}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
-                                  {report.createdAt || report.lastSeenDate || report.last_seen_date ? new Date(report.createdAt || report.lastSeenDate || report.last_seen_date).toLocaleDateString('es-CL') : 'N/A'}
+                                  {report.createdAt ||
+                                  report.lastSeenDate ||
+                                  report.last_seen_date
+                                    ? new Date(
+                                        report.createdAt ||
+                                          report.lastSeenDate ||
+                                          report.last_seen_date,
+                                      ).toLocaleDateString("es-CL")
+                                    : "N/A"}
                                 </span>
                               </div>
                             </div>
                             <div className="flex gap-2">
                               <Link href={`/report/${report.id}`}>
-                                <Button variant="outline" size="sm" className="gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1"
+                                >
                                   <Eye className="h-3 w-3" />
                                   Ver
                                 </Button>
@@ -296,14 +353,19 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
                   <CardDescription>
-                    Aquí se muestra tu información de contacto almacenada en el sistema.
+                    Aquí se muestra tu información de contacto almacenada en el
+                    sistema.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <p className="text-sm text-muted-foreground">Nombre Completo</p>
-                      <p className="font-medium capitalize">{user.name} {user.lastName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nombre Completo
+                      </p>
+                      <p className="font-medium capitalize">
+                        {user.name} {user.lastName}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
@@ -311,21 +373,25 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <p className="font-medium">{user.phoneNumber || 'N/A'}</p>
+                      <p className="font-medium">{user.phoneNumber || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">País</p>
-                      <p className="font-medium capitalize">{user.country || 'N/A'}</p>
+                      <p className="font-medium capitalize">
+                        {user.country || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Dirección</p>
                       <p className="font-medium capitalize">
-                        {user.address} {user.addressNumber || ''}
+                        {user.address} {user.addressNumber || ""}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Ciudad</p>
-                      <p className="font-medium capitalize">{user.city || 'N/A'}</p>
+                      <p className="font-medium capitalize">
+                        {user.city || "N/A"}
+                      </p>
                     </div>
                   </div>
                 </CardContent>

@@ -68,8 +68,9 @@ export default function PetsPage() {
         }
 
         const data = await response.json();
-        setReports(data || []);
-        setFilteredReports(data || []);
+        const petsArray = data.collection || [];
+        setReports(petsArray);
+        setFilteredReports(petsArray);
       } catch (err: any) {
         setError(err.message || 'Error loading reports');
       } finally {

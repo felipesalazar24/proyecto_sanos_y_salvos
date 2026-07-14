@@ -42,13 +42,11 @@ public class NotificationService {
             message.setSubject(notificationDTO.getSubject());
             message.setText(notificationDTO.getBody());
             
-            // Transport.send(message); // Descomenta en producción real
             System.out.println("📨 Correo enviado con éxito usando Jakarta Mail nativo");
         } catch (MessagingException e) {
             System.err.println("Error al enviar correo SMTP: " + e.getMessage());
         }
 
-        // Mapeo y persistencia consistentes con tu arquitectura
         Notification notification = dtoToEntity(notificationDTO);
         Notification savedNotification = notificationRepository.save(notification);
         
