@@ -10,37 +10,50 @@
       "backend": [
         {
           "url_pattern": "/v1/public/{path}",
-          "host": [
-            "http://bff:8084"
-          ]
+          "host": ["http://bff:8084"]
         }
       ]
     },
     {
       "endpoint": "/api/v1/bff/web/auth/register",
       "method": "POST",
+      "input_headers": ["*"],
       "backend": [
         {
           "url_pattern": "/api/v1/bff/web/auth/register",
-          "host": [
-            "http://bff:8084"
-          ]
+          "host": ["http://bff:8084"],
+          "encoding": "no-op"
         }
-      ]
+      ],
+      "output_encoding": "no-op"
     },
     {
       "endpoint": "/api/v1/bff/web/auth/login",
       "method": "POST",
+      "input_headers": ["*"],
       "backend": [
         {
           "url_pattern": "/api/v1/bff/web/auth/login",
-          "host": [
-            "http://bff:8084"
-          ]
+          "host": ["http://bff:8084"],
+          "encoding": "no-op"
         }
-      ]
+      ],
+      "output_encoding": "no-op"
     },
     {
+      "endpoint": "/api/v1/bff/web/users/profile",
+      "method": "GET",
+      "input_headers": ["*"],
+      "input_query_strings": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/bff/web/users/profile",
+          "host": ["http://bff:8084"],
+          "encoding": "no-op"
+        }
+      ],
+      "output_encoding": "no-op"
+    },{
       "endpoint": "/api/v1/bff/web/pets/pet-types",
       "method": "GET",
       "backend": [
@@ -75,19 +88,6 @@
           "host": [
             "http://bff:8084"
           ]
-        }
-      ]
-    },
-    {
-      "endpoint": "/api/v1/bff/web/users/profile",
-      "method": "GET",
-      "querystring_params": ["email"],
-      "input_headers": ["Authorization"],
-      "backend": [
-        {
-          "url_pattern": "/api/v1/bff/web/users/profile",
-          "host": ["http://bff:8084"],
-          "encoding": "json"
         }
       ]
     }
