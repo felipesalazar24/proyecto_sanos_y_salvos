@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: ms-auth
-          image: ms-auth:1.0
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-ms-auth:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8083
           env:

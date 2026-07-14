@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: ms-pet
-          image: ms-pet:1.0
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-ms-pets:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8082
           env:

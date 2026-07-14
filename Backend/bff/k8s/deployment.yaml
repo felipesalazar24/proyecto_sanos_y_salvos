@@ -15,14 +15,14 @@ spec:
     spec:
       containers:
         - name: ms-bff
-          image: ms-bff:1.0  
-          imagePullPolicy: IfNotPresent
+          image: proyecto_sanos_y_salvos-bff:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8084
           env:
             - name: SERVER_PORT
               value: "8084"
-            
+
             - name: USERS_URL
               value: "http://ms-user:8081"
             - name: AUTH_URL
@@ -33,13 +33,17 @@ spec:
               value: "http://ms-notification:8085"   
             - name: JWK_URI
               value: "http://ms-auth:8083/.well-known/jwks.json"
+            - name: APP_SECURITY_JWT_JWK_SET_URI
+              value: "http://ms-auth:8083/.well-known/jwks.json"
             - name: ENDPOINTS_MS_AUTH
               value: "http://ms-auth:8083"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Djava.net.preferIPv4Stack=true"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-bff
+  name: bff
   namespace: microservicios
 spec:
   selector:

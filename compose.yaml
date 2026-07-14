@@ -262,6 +262,18 @@ services:
       - GLITCHTIP_DOMAIN=http://localhost:8000
     networks:
       - sanos-y-salvos-network
+  
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    depends_on:
+      - bff
+    ports:
+      - "8086:8086"
+    networks:
+      - sanos-y-salvos-network
 
 networks:
   sanos-y-salvos-network:
